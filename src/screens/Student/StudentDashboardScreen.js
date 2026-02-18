@@ -33,6 +33,25 @@ export const StudentDashboardScreen = ({ navigation }) => {
         </Pressable>
       </View>
 
+      {/* Fee Alert Banner */}
+      {fees[profile?.id || 'current_user']?.status !== 'paid' && (
+        <Pressable
+          style={styles.feeBanner}
+          onPress={() => navigation.navigate('StudentFees')}
+        >
+          <View style={styles.feeContent}>
+            <View style={styles.feeIconBg}>
+              <Ionicons name="wallet-outline" size={20} color="#92400e" />
+            </View>
+            <View>
+              <Text style={styles.feeTitle}>Pending Fees Found</Text>
+              <Text style={styles.feeSubTitle}>Please pay your monthly installment</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#92400e" />
+        </Pressable>
+      )}
+
       {liveLecture?.active && <LiveLectureBanner lecture={liveLecture} />}
 
       <View style={styles.sectionHeader}>
@@ -194,4 +213,20 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   emptyAnn: { marginTop: 12, color: '#64748b', fontWeight: '600' },
+  feeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fffbeb',
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#fef3c7',
+  },
+  feeContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  feeIconBg: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fef3c7', justifyContent: 'center', alignItems: 'center' },
+  feeTitle: { fontSize: 16, fontWeight: '800', color: '#92400e' },
+  feeSubTitle: { fontSize: 12, color: '#b45309', fontWeight: '500' },
 });

@@ -21,6 +21,9 @@ import { StudentGroupChatScreen } from '../screens/Student/StudentGroupChatScree
 import { StudentProfileScreen } from '../screens/Student/StudentProfileScreen';
 import { StudentGroupInfoScreen } from '../screens/Student/StudentGroupInfoScreen';
 import { AdminGroupMembersScreen } from '../screens/Admin/AdminGroupMembersScreen';
+import { AdminFeesScreen } from '../screens/Admin/AdminFeesScreen';
+
+import { StudentFeesScreen } from '../screens/Student/StudentFeesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -192,6 +195,16 @@ const MainStack = () => {
         name="GroupMembers"
         component={AdminGroupMembersScreen}
         options={{ title: 'Participants' }}
+      />
+      <Stack.Screen
+        name="AdminFees"
+        component={AdminFeesScreen}
+        options={{ title: 'Fees Management' }}
+      />
+      <Stack.Screen
+        name="StudentFees"
+        component={StudentFeesScreen}
+        options={{ title: 'Pay Fees' }}
       />
     </Stack.Navigator>
   );

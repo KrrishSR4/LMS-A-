@@ -39,6 +39,8 @@ export const AppProvider = ({ children }) => {
   const [disabledStudents, setDisabledStudents] = useState([]);
   const [liveLecture, setLiveLecture] = useState(LIVE_LECTURE_BANNER);
   const [isTyping, setIsTyping] = useState({}); // { groupId: [username, ...] }
+  const [fees, setFees] = useState({}); // { studentId: { amount: number, status: 'pending'|'paid', dueDate: string } }
+  const [bankAccount, setBankAccount] = useState({ balance: 0, accountName: '', accountNumber: '', bankName: '' });
 
   // Initialize: load from storage or use mock data
   useEffect(() => {
@@ -53,6 +55,8 @@ export const AppProvider = ({ children }) => {
       const storedRole = await getItem(STORAGE_KEYS.ROLE);
       const storedSettings = await getItem(STORAGE_KEYS.SETTINGS);
       const storedLiveLecture = await getItem(STORAGE_KEYS.LIVE_LECTURE);
+      const storedFees = await getItem('lms_fees');
+      const storedBank = await getItem('lms_bank');
 
       setGroups(storedGroups || [...DEFAULT_GROUPS]);
       setPendingStudents(storedPending || [...DEFAULT_PENDING_STUDENTS]);
@@ -71,6 +75,19 @@ export const AppProvider = ({ children }) => {
       setRole(storedRole || 'student');
       setProfile({ ...DEFAULT_PROFILE });
       setLiveLecture(storedLiveLecture || { ...LIVE_LECTURE_BANNER });
+
+      // Init fees for existing students if not stored
+      if (storedFees) {
+        setFees(storedFees);
+      } else {
+        const initialFees = {};
+        Object.keys(DEFAULT_STUDENTS).forEach(id => {
+          initialFees[id] = { amount: 5000, status: 'pending', dueDate: '2026-03-05' };
+        });
+        setFees(initialFees);
+      }
+      setBankAccount(storedBank || { balance: 0, accountName: 'Admin Primary', accountNumber: '**** 8899', bankName: 'HDFC Bank' });
+
       setIsReady(true);
     };
     init();
@@ -103,11 +120,13 @@ export const AppProvider = ({ children }) => {
     await setItem(STORAGE_KEYS.DISABLED_STUDENTS, disabledStudents);
     await setItem(STORAGE_KEYS.STUDENTS, students);
     await setItem(STORAGE_KEYS.LIVE_LECTURE, liveLecture);
-  }, [groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture]);
+    await setItem('lms_fees', fees);
+    await setItem('lms_bank', bankAccount);
+  }, [groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount]);
 
   useEffect(() => {
     if (isReady) persist();
-  }, [isReady, groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture]);
+  }, [isReady, groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount]);
 
   // Role
   const setRoleAndPersist = useCallback((r) => {
@@ -193,6 +212,19 @@ export const AppProvider = ({ children }) => {
     }));
   }, []);
 
+  const broadcastMessage = useCallback((msg) => {
+    setMessages((prev) => {
+      const next = { ...prev };
+      groups.forEach((g) => {
+        next[g.id] = [
+          ...(next[g.id] || []),
+          { ...msg, id: generateId(), timestamp: Date.now() }
+        ];
+      });
+      return next;
+    });
+  }, [groups]);
+
   const pinMessage = useCallback((groupId, messageId) => {
     setMessages((prev) => ({
       ...prev,
@@ -240,6 +272,36 @@ export const AppProvider = ({ children }) => {
     setProfile((prev) => ({ ...prev, ...updates }));
   }, []);
 
+  // Fees Management logic
+  const collectFee = useCallback((studentId) => {
+    setFees((prev) => {
+      const studentFee = prev[studentId] || { amount: 0 };
+      const updated = { ...prev, [studentId]: { ...studentFee, status: 'paid' } };
+
+      // Add to bank balance (prototype)
+      setBankAccount(bank => ({ ...bank, balance: bank.balance + studentFee.amount }));
+      return updated;
+    });
+  }, []);
+
+  const sendFeeReminder = useCallback((studentId) => {
+    const student = students[studentId];
+    // In a real app, this would trigger a push notification/SMS
+    console.log(`Reminder sent to ${student?.name} for amount: ${fees[studentId]?.amount}`);
+  }, [students, fees]);
+
+  const updateBankDetails = useCallback((updates) => {
+    setBankAccount(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const payFee = useCallback((studentId, amount) => {
+    setFees((prev) => ({
+      ...prev,
+      [studentId]: { ...(prev[studentId] || {}), status: 'paid' }
+    }));
+    setBankAccount(bank => ({ ...bank, balance: bank.balance + amount }));
+  }, []);
+
   const value = {
     isReady,
     role,
@@ -262,11 +324,18 @@ export const AppProvider = ({ children }) => {
     updateGroupSettings,
     assignStudentToGroup,
     addMessage,
+    broadcastMessage,
     pinMessage,
     votePoll,
     disableStudent,
     removeStudentFromGroup,
     updateProfile,
+    fees,
+    bankAccount,
+    collectFee,
+    sendFeeReminder,
+    updateBankDetails,
+    payFee,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -84,7 +84,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
             <Ionicons name="megaphone" size={24} color="#ea580c" />
           </View>
           <Text style={styles.actionTitle}>Broadcast</Text>
-          <Text style={styles.actionSubtitle}>Send notice</Text>
+          <Text style={styles.actionSubtitle}>Send notifications</Text>
         </Pressable>
       </View>
 

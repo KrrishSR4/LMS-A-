@@ -26,7 +26,7 @@ export const StudentDashboardScreen = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.welcomeText}>Hello, {profile?.name || 'Student'} 👋</Text>
-          <Text style={styles.welcomeSub}>Aapka din kaisa hai? Let's study!</Text>
+          <Text style={styles.welcomeSub}>How is your day going? Ready to study?</Text>
         </View>
         <Pressable style={styles.profileIndicator}>
           <Text style={styles.profileText}>{profile?.name?.charAt(0) || 'S'}</Text>

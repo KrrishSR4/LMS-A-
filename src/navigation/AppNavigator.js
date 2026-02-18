@@ -41,7 +41,17 @@ const HeaderBackBtn = ({ navigation }) => (
   />
 );
 
-const AdminTabs = () => (
+const MasterHomeBtn = ({ navigation }) => (
+  <Ionicons
+    name="home"
+    size={24}
+    color="#fff"
+    style={{ marginRight: 20 }}
+    onPress={() => navigation.replace('Entry')}
+  />
+);
+
+const AdminTabs = ({ navigation }) => (
   <Tab.Navigator
     screenOptions={{
       tabBarActiveTintColor: '#2563eb',
@@ -61,6 +71,7 @@ const AdminTabs = () => (
       headerStyle: { backgroundColor: '#2563eb' },
       headerTintColor: '#fff',
       headerTitleStyle: { fontWeight: '700' },
+      headerRight: () => <MasterHomeBtn navigation={navigation} />,
     }}
   >
     <Tab.Screen
@@ -90,7 +101,7 @@ const AdminTabs = () => (
   </Tab.Navigator>
 );
 
-const StudentTabs = () => (
+const StudentTabs = ({ navigation }) => (
   <Tab.Navigator
     screenOptions={{
       tabBarActiveTintColor: '#2563eb',
@@ -110,6 +121,7 @@ const StudentTabs = () => (
       headerStyle: { backgroundColor: '#2563eb' },
       headerTintColor: '#fff',
       headerTitleStyle: { fontWeight: '700' },
+      headerRight: () => <MasterHomeBtn navigation={navigation} />,
     }}
   >
     <Tab.Screen

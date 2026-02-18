@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# expo-cli
+.expo/*
+dist/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# web-build
+web-build/
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# local logs
+logs
+*.log

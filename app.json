@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "LMS Expo",
+    "slug": "lms-expo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lms.expo"
+    },
+    "android": {
+      "package": "com.lms.expo"
+    },
+    "scheme": "lms",
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}

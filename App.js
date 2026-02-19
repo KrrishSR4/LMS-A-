@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto';
 /**
  * LMS Expo - Coaching Institute LMS Demo
  * Runs in Expo Go. No backend, mock data only.

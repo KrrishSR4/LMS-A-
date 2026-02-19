@@ -5,22 +5,44 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "//icon": "./assets/logo.png",
     "newArchEnabled": true,
     "splash": {
+      "//image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2563eb"
+      "backgroundColor": "#1e293b"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lms.expo"
+      "bundleIdentifier": "com.lms.expo",
+      "//icon": "./assets/logo.png"
     },
     "android": {
-      "package": "com.lms.expo"
+      "package": "com.lms.expo",
+      "softwareKeyboardLayoutMode": "adjustResize",
+      "adaptiveIcon": {
+        "//foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#1e293b"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "scheme": "lms",
     "plugins": [
       "expo-asset",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow LMS Expo to access your photos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e6e035b8-0c1f-46c6-8b87-c32778fb7da9"
+      }
+    }
   }
 }

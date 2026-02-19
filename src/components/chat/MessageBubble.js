@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, Linking } from 'react-native';
 
 /**
  * Chat message bubble - admin vs student styling.
@@ -38,13 +38,40 @@ export const MessageBubble = ({ message, isAdmin }) => {
 
   if (message.type === 'image') {
     return (
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-        <Text style={styles.sender}>{message.senderName}</Text>
-        <View style={styles.imagePreview}>
-          <Text style={styles.imagePlaceholder}>🖼️ Image</Text>
+      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, { padding: 4 }]}>
+        <View style={styles.mediaHeader}>
+          <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
         </View>
-        {message.text ? <Text style={styles.text}>{message.text}</Text> : null}
-        <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
+        <Image
+          source={{ uri: message.url }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.mediaFooter}>
+          <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (message.type === 'video') {
+    return (
+      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, { padding: 4 }]}>
+        <View style={styles.mediaHeader}>
+          <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
+        </View>
+        <Pressable
+          style={styles.videoPlaceholder}
+          onPress={() => Linking.openURL(message.url)}
+        >
+          <View style={styles.playButton}>
+            <Text style={{ fontSize: 32 }}>▶️</Text>
+          </View>
+          <Text style={styles.videoLabel}>Play Video</Text>
+        </Pressable>
+        <View style={styles.mediaFooter}>
+          <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
+        </View>
       </View>
     );
   }
@@ -162,13 +189,42 @@ const styles = StyleSheet.create({
   },
   pollOptionText: { fontSize: 14, color: '#334155', fontWeight: '500' },
   pollVotes: { fontSize: 12, color: '#2563eb', fontWeight: '600' },
-  imagePreview: {
+  image: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 14,
     backgroundColor: '#f1f5f9',
-    height: 160,
+  },
+  videoPlaceholder: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    backgroundColor: '#0f172a',
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  playButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoLabel: {
+    color: '#fff',
+    marginTop: 10,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  mediaHeader: {
+    paddingHorizontal: 8,
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
+  mediaFooter: {
+    paddingHorizontal: 8,
+    paddingBottom: 4,
   },
   imagePlaceholder: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
   pdfPreview: {

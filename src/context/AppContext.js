@@ -17,6 +17,7 @@ import {
   LIVE_LECTURE_BANNER,
 } from '../mockData';
 import { generateId } from '../utils/helpers';
+import { supabase } from '../services/supabase';
 
 const AppContext = createContext(null);
 
@@ -41,8 +42,64 @@ export const AppProvider = ({ children }) => {
   const [isTyping, setIsTyping] = useState({}); // { groupId: [username, ...] }
   const [fees, setFees] = useState({}); // { studentId: { amount: number, status: 'pending'|'paid', dueDate: string } }
   const [bankAccount, setBankAccount] = useState({ balance: 0, accountName: '', accountNumber: '', bankName: '' });
+  const [session, setSession] = useState(null);
 
-  // Initialize: load from storage or use mock data
+  // Supabase Auth Listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        // Update local profile with Supabase user data
+        setProfile(prev => ({
+          ...prev,
+          id: session.user.id,
+          phone: session.user.phone,
+        }));
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        setProfile(prev => ({
+          ...prev,
+          id: session.user.id,
+          phone: session.user.phone,
+        }));
+      } else {
+        setProfile(DEFAULT_PROFILE);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Upload File Logic (Supabase Storage)
+  const uploadFile = useCallback(async (fileUri, fileName) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: fileUri,
+        name: fileName,
+        type: 'image/jpeg', // Default or detect
+      });
+
+      const { data, error } = await supabase.storage
+        .from('attachments')
+        .upload(`${profile.id}/${Date.now()}_${fileName}`, formData);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('attachments')
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      return null;
+    }
+  }, [profile.id]);
   useEffect(() => {
     const init = async () => {
       // NOTE: For demo purposes, we can choose to clear or keep. 
@@ -336,6 +393,8 @@ export const AppProvider = ({ children }) => {
     sendFeeReminder,
     updateBankDetails,
     payFee,
+    session,
+    uploadFile,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

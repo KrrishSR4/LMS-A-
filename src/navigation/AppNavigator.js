@@ -11,6 +11,7 @@ import { useApp } from '../context/AppContext';
 import { LoadingSpinner } from '../components';
 
 import { EntryScreen } from '../screens/EntryScreen';
+import { PhoneLoginScreen } from '../screens/Auth/PhoneLoginScreen';
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
 import { AdminStudentApprovalScreen } from '../screens/Admin/AdminStudentApprovalScreen';
 import { AdminGroupManagementScreen } from '../screens/Admin/AdminGroupManagementScreen';
@@ -222,7 +223,9 @@ export const AppNavigator = () => {
           headerShown: false,
           animation: 'fade_from_bottom',
         }}
+        initialRouteName="PhoneLogin"
       >
+        <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} />
         <Stack.Screen name="Entry" component={EntryScreen} />
         <Stack.Screen name="App" component={MainStack} />
       </Stack.Navigator>

@@ -63,13 +63,13 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
     }
   }, [msgList.length]);
 
-  const sendText = (text) => {
+  const sendText = (text, type = 'text') => {
     if (!text?.trim() || !canSend || isDisabled) return;
     addMessage(groupId, {
-      type: 'text',
+      type,
       senderId: voterId,
       senderName: profile?.name || 'Student',
-      text: text.trim(),
+      [type === 'text' ? 'text' : 'url']: text.trim(),
     });
   };
 
@@ -108,8 +108,8 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 95}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       {showLiveBanner && <LiveLectureBanner lecture={liveLecture} />}
       <FlatList
@@ -148,8 +148,6 @@ const styles = StyleSheet.create({
   infoBtn: { fontSize: 13, color: '#2563eb', fontWeight: '700' },
   inputRow: {
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
   },
   typingContainer: {
     paddingHorizontal: 16,

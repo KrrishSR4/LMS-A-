@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, Animated, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import { useApp } from '../../context/AppContext';
 
 /**
  * Modern Chat input - WhatsApp style.
@@ -14,8 +17,11 @@ export const ChatInputControlled = ({
   placeholder = 'Message',
   disabled,
 }) => {
+  const { uploadFile } = useApp();
   const [isTyping, setIsTyping] = useState(false);
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const typing = value?.trim().length > 0;
@@ -38,31 +44,80 @@ export const ChatInputControlled = ({
     }
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Allow access to gallery to send images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      handleUpload(asset.uri, asset.fileName || 'upload.jpg', asset.type);
+    }
+  };
+
+  const pickCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Allow access to camera to take photos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      handleUpload(asset.uri, asset.fileName || 'camera.jpg', 'image');
+    }
+  };
+
+  const handleUpload = async (uri, name, type) => {
+    setIsUploading(true);
+    const publicUrl = await uploadFile(uri, name);
+    setIsUploading(false);
+
+    if (publicUrl) {
+      onSend(publicUrl, type === 'video' ? 'video' : 'image');
+    } else {
+      Alert.alert('Upload Error', 'Failed to upload media to storage.');
+    }
+  };
+
   return (
-    <View style={styles.outerContainer}>
-      <Pressable style={styles.plusBtn} onPress={onPlusPress}>
+    <View style={[styles.outerContainer, { paddingBottom: Math.max(insets.bottom, 15) }]}>
+      <Pressable style={styles.plusBtn} onPress={onPlusPress} disabled={disabled || isUploading}>
         <Ionicons name="add" size={24} color="#64748b" />
       </Pressable>
 
       <View style={styles.inputCard}>
-        <Pressable style={styles.iconBtn}>
+        <Pressable style={styles.iconBtn} disabled={disabled || isUploading}>
           <Ionicons name="happy-outline" size={24} color="#64748b" />
         </Pressable>
         <TextInput
           style={styles.input}
-          placeholder={placeholder}
+          placeholder={isUploading ? 'Uploading...' : placeholder}
           placeholderTextColor="#94a3b8"
           value={value}
           onChangeText={onChangeText}
           multiline
           maxLength={2000}
-          editable={!disabled}
+          editable={!disabled && !isUploading}
           blurOnSubmit={false}
         />
-        <Pressable style={styles.iconBtn}>
+        <Pressable style={styles.iconBtn} onPress={pickImage} disabled={disabled || isUploading}>
           <Ionicons name="attach-outline" size={24} color="#64748b" style={{ transform: [{ rotate: '45deg' }] }} />
         </Pressable>
-        <Pressable style={styles.iconBtn}>
+        <Pressable style={styles.iconBtn} onPress={pickCamera} disabled={disabled || isUploading}>
           <Ionicons name="camera-outline" size={24} color="#64748b" />
         </Pressable>
       </View>
@@ -89,9 +144,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingTop: 5,
-    paddingBottom: 5,
-    backgroundColor: 'transparent',
+    paddingTop: 8,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
   },
   plusBtn: {
     width: 42,

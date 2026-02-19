@@ -82,13 +82,13 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
     }
   }, [msgList.length]);
 
-  const sendText = (text) => {
+  const sendText = (text, type = 'text') => {
     if (!text?.trim()) return;
     addMessage(groupId, {
-      type: 'text',
+      type,
       senderId: 'admin',
       senderName: 'Admin',
-      text: text.trim(),
+      [type === 'text' ? 'text' : 'url']: text.trim(),
     });
   };
 
@@ -164,8 +164,8 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 95}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       {showLiveBanner && <LiveLectureBanner lecture={liveLecture} />}
       <FlatList
@@ -293,8 +293,6 @@ const styles = StyleSheet.create({
   headerBtnSpacer: {},
   inputRow: {
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
   },
   typingContainer: {
     paddingHorizontal: 16,

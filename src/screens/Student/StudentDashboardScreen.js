@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
  * Student dashboard - joined groups, live lecture, announcements.
  */
 export const StudentDashboardScreen = ({ navigation }) => {
-  const { groups, groupMembers, profile, messages, liveLecture } = useApp();
+  const { groups, groupMembers, profile, messages, liveLecture, fees } = useApp();
 
   const displayGroups =
     groups?.filter((g) => (groupMembers[g.id] || []).includes(profile?.id || 'current_user')) || groups || [];

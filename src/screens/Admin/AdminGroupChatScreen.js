@@ -164,8 +164,8 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 95}
     >
       {showLiveBanner && <LiveLectureBanner lecture={liveLecture} />}
       <FlatList
@@ -184,20 +184,15 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
         }
       />
       <View style={styles.inputRow}>
-        <Pressable style={styles.attachBtn} onPress={() => setShowActions(!showActions)}>
-          <Ionicons name="add" size={24} color="#64748b" />
-        </Pressable>
-        <View style={styles.inputWrapper}>
-          <ChatInputControlled
-            value={input}
-            onChangeText={(t) => {
-              setInput(t);
-              // In a real app, this would throttle and send to server
-            }}
-            onSend={sendText}
-            placeholder="Write a message..."
-          />
-        </View>
+        <ChatInputControlled
+          value={input}
+          onChangeText={(t) => {
+            setInput(t);
+          }}
+          onSend={sendText}
+          onPlusPress={() => setShowActions(!showActions)}
+          placeholder="Write a message..."
+        />
       </View>
 
       {/* Admin actions modal */}
@@ -297,25 +292,10 @@ const styles = StyleSheet.create({
   headerBtn: { color: '#fff', fontSize: 16, fontWeight: '600' },
   headerBtnSpacer: {},
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 20,
-    paddingTop: 10,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
   },
-  attachBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  inputWrapper: { flex: 1 },
   typingContainer: {
     paddingHorizontal: 16,
     paddingVertical: 4,

@@ -45,7 +45,10 @@ export const AdminDashboardScreen = ({ navigation }) => {
 
         <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
-            <View style={[styles.statItem, { backgroundColor: '#fdf4ff' }]}>
+            <Pressable
+              style={[styles.statItem, { backgroundColor: '#fdf4ff' }]}
+              onPress={() => navigation.navigate('GroupManagement')}
+            >
               <View style={[styles.statIconBg, { backgroundColor: '#fae8ff' }]}>
                 <Ionicons name="apps" size={24} color="#a21caf" />
               </View>
@@ -53,8 +56,11 @@ export const AdminDashboardScreen = ({ navigation }) => {
                 <Text style={styles.statValue}>{groups?.length || 0}</Text>
                 <Text style={styles.statLabel}>Groups</Text>
               </View>
-            </View>
-            <View style={[styles.statItem, { backgroundColor: '#f0fdf4' }]}>
+            </Pressable>
+            <Pressable
+              style={[styles.statItem, { backgroundColor: '#f0fdf4' }]}
+              onPress={() => navigation.navigate('StudentApproval')}
+            >
               <View style={[styles.statIconBg, { backgroundColor: '#dcfce7' }]}>
                 <Ionicons name="people" size={24} color="#15803d" />
               </View>
@@ -62,8 +68,11 @@ export const AdminDashboardScreen = ({ navigation }) => {
                 <Text style={styles.statValue}>{uniqueStudentIds.size}</Text>
                 <Text style={styles.statLabel}>Students</Text>
               </View>
-            </View>
-            <View style={[styles.statItem, { backgroundColor: '#fff7ed' }]}>
+            </Pressable>
+            <Pressable
+              style={[styles.statItem, { backgroundColor: '#fff7ed' }]}
+              onPress={() => navigation.navigate('StudentApproval')}
+            >
               <View style={[styles.statIconBg, { backgroundColor: '#ffedd5' }]}>
                 <Ionicons name="time" size={24} color="#c2410c" />
               </View>
@@ -71,7 +80,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
                 <Text style={styles.statValue}>{pending}</Text>
                 <Text style={styles.statLabel}>Pending</Text>
               </View>
-            </View>
+            </Pressable>
           </View>
         </View>
 

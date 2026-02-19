@@ -10,6 +10,7 @@ export const ChatInputControlled = ({
   value,
   onChangeText,
   onSend,
+  onPlusPress,
   placeholder = 'Message',
   disabled,
 }) => {
@@ -39,6 +40,10 @@ export const ChatInputControlled = ({
 
   return (
     <View style={styles.outerContainer}>
+      <Pressable style={styles.plusBtn} onPress={onPlusPress}>
+        <Ionicons name="add" size={24} color="#64748b" />
+      </Pressable>
+
       <View style={styles.inputCard}>
         <Pressable style={styles.iconBtn}>
           <Ionicons name="happy-outline" size={24} color="#64748b" />
@@ -55,16 +60,14 @@ export const ChatInputControlled = ({
           blurOnSubmit={false}
         />
         <Pressable style={styles.iconBtn}>
-          <Ionicons name="attach" size={26} color="#64748b" style={{ transform: [{ rotate: '45deg' }] }} />
+          <Ionicons name="attach-outline" size={24} color="#64748b" style={{ transform: [{ rotate: '45deg' }] }} />
         </Pressable>
-        {!isTyping && (
-          <Pressable style={styles.iconBtn}>
-            <Ionicons name="camera-outline" size={24} color="#64748b" />
-          </Pressable>
-        )}
+        <Pressable style={styles.iconBtn}>
+          <Ionicons name="camera-outline" size={24} color="#64748b" />
+        </Pressable>
       </View>
 
-      <Animated.View style={[styles.sendCircle, { transform: [{ scale: scaleAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}>
+      <Animated.View style={[styles.sendCircle, { transform: [{ scale: scaleAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }]}>
         <Pressable
           onPress={isTyping ? handleSend : null}
           style={[styles.mainBtn, !isTyping && styles.micBtn]}
@@ -84,57 +87,60 @@ export const ChatInputControlled = ({
 const styles = StyleSheet.create({
   outerContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 8,
-    paddingBottom: 8,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 5,
+    paddingBottom: 5,
     backgroundColor: 'transparent',
+  },
+  plusBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   inputCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 28,
+    backgroundColor: '#ffffff',
+    borderRadius: 30,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    minHeight: 48,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    paddingVertical: 2,
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   input: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 16,
     color: '#0f172a',
     paddingHorizontal: 8,
     paddingVertical: 10,
     maxHeight: 120,
+    fontWeight: '400',
   },
   iconBtn: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendCircle: {
-    marginLeft: 6,
+    marginLeft: 8,
   },
   mainBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#2563eb',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   micBtn: {
-    backgroundColor: '#2563eb', // Can be blue or another accent
+    backgroundColor: '#2563eb',
   },
 });

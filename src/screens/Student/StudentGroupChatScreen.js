@@ -108,8 +108,8 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 95}
     >
       {showLiveBanner && <LiveLectureBanner lecture={liveLecture} />}
       <FlatList
@@ -128,15 +128,14 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
         }
       />
       <View style={styles.inputRow}>
-        <View style={styles.inputWrapper}>
-          <ChatInputControlled
-            value={input}
-            onChangeText={setInput}
-            onSend={sendText}
-            placeholder={inputDisabled ? (isDisabled ? 'You are disabled' : 'Messages disabled') : 'Write a message...'}
-            disabled={inputDisabled}
-          />
-        </View>
+        <ChatInputControlled
+          value={input}
+          onChangeText={setInput}
+          onSend={sendText}
+          onPlusPress={() => navigation.navigate('GroupInfo', { groupId, groupName })}
+          placeholder={inputDisabled ? (isDisabled ? 'You are disabled' : 'Messages disabled') : 'Write a message...'}
+          disabled={inputDisabled}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -148,14 +147,10 @@ const styles = StyleSheet.create({
   headerRight: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#eff6ff', borderRadius: 20, marginRight: 8 },
   infoBtn: { fontSize: 13, color: '#2563eb', fontWeight: '700' },
   inputRow: {
-    paddingHorizontal: 12,
-    paddingBottom: 20,
-    paddingTop: 10,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
   },
-  inputWrapper: { flex: 1 },
   typingContainer: {
     paddingHorizontal: 16,
     paddingVertical: 4,

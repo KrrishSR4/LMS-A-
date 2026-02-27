@@ -15,17 +15,26 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { auth } from '../../services/firebase';
-import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import {
+    PhoneAuthProvider,
+    signInWithCredential,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword
+} from 'firebase/auth';
 import { useApp } from '../../context/AppContext';
-
-const { width } = Dimensions.get('window');
-
-// Bhai, Firebase config yahan se uthayenge
 import firebaseApp from '../../services/firebase';
+
+const logoAsset = require('../../../assets/logo.png');
+const { width } = Dimensions.get('window');
 
 export const PhoneLoginScreen = ({ navigation }) => {
     const { setRole } = useApp();
+    const [loginMode, setLoginMode] = useState('phone'); // 'phone' | 'email'
+    const [emailMode, setEmailMode] = useState('login'); // 'login' | 'signup'
     const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('phone'); // 'phone' or 'otp'
     const [loading, setLoading] = useState(false);
@@ -40,6 +49,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
+            console.log('Bhai, OTP bhej rahe hain target:', `+91${phone}`);
             const phoneProvider = new PhoneAuthProvider(auth);
             const vId = await phoneProvider.verifyPhoneNumber(
                 `+91${phone}`,
@@ -47,9 +57,41 @@ export const PhoneLoginScreen = ({ navigation }) => {
             );
             setVerificationId(vId);
             setStep('otp');
+            console.log('OTP request successful. vId:', vId);
             Alert.alert('Success', 'Verification code sent!');
         } catch (error) {
+            console.error('Phone Login Error:', error);
             Alert.alert('Error', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEmailAuth = async () => {
+        if (!email || !password) {
+            Alert.alert('Error', 'Email aur Password dono bhariye bhai');
+            return;
+        }
+        setLoading(true);
+        try {
+            if (emailMode === 'signup') {
+                console.log('Registering user:', email);
+                await createUserWithEmailAndPassword(auth, email, password);
+                Alert.alert('Success', 'Account ban gaya bhai! Ab aap login ho gaye hain.');
+            } else {
+                console.log('Logging in user:', email);
+                await signInWithEmailAndPassword(auth, email, password);
+            }
+            setRole('student');
+            navigation.replace('App');
+        } catch (error) {
+            console.error('Email Auth Error:', error);
+            let msg = error.message;
+            if (error.code === 'auth/invalid-credential') msg = 'Email ya Password galat hai.';
+            if (error.code === 'auth/email-already-in-use') msg = 'Ye email pehle se registered hai bhai.';
+            if (error.code === 'auth/weak-password') msg = 'Password thoda strong rakho (min 6 chars).';
+
+            Alert.alert('Auth Failed', msg);
         } finally {
             setLoading(false);
         }
@@ -90,77 +132,154 @@ export const PhoneLoginScreen = ({ navigation }) => {
             <FirebaseRecaptchaVerifierModal
                 ref={recaptchaVerifier}
                 firebaseConfig={firebaseApp.options}
-                attemptInvisibleRetries={5}
+                // Bhai, isko thoda simple rakhte hain taaki error samajh aaye
+                title="Verify you are human"
+                cancelLabel="Close"
             />
 
             <View style={styles.bgDecoration} />
 
             <View style={styles.content}>
                 <View style={styles.header}>
-                    <View style={styles.logoIcon}>
+                    <View style={styles.logoContainer}>
                         <Image
-                            source={{ uri: 'https://placehold.co/400x400/2563eb/ffffff?text=LMS' }}
+                            source={logoAsset}
                             style={styles.logoImage}
                             resizeMode="contain"
                         />
                     </View>
-                    <Text style={styles.title}>{step === 'phone' ? 'Phone Login' : 'Verify OTP'}</Text>
+                    <Text style={styles.title}>Road To A+</Text>
                     <Text style={styles.subtitle}>
-                        {step === 'phone'
-                            ? 'Enter your phone number to receive a verification code'
-                            : `Enter the code sent to +91 ${phone}`}
+                        {loginMode === 'email'
+                            ? (emailMode === 'signup' ? 'Create your account' : 'Login to your account')
+                            : (step === 'phone'
+                                ? 'Enter your phone number'
+                                : `Enter the code sent to +91 ${phone}`)}
                     </Text>
                 </View>
 
                 <View style={styles.form}>
-                    {step === 'phone' ? (
-                        <View style={styles.inputContainer}>
-                            <View style={styles.countryCode}>
-                                <Text style={styles.countryText}>+91</Text>
+                    {loginMode === 'email' ? (
+                        <>
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Email Address"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
                             </View>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Phone Number"
-                                keyboardType="phone-pad"
-                                value={phone}
-                                onChangeText={setPhone}
-                                maxLength={10}
-                            />
-                        </View>
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Password"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry={!showPassword}
+                                />
+                                <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                    <Ionicons
+                                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                        size={20}
+                                        color="#64748b"
+                                    />
+                                </Pressable>
+                            </View>
+
+                            <Pressable
+                                style={[styles.button, loading && styles.buttonDisabled]}
+                                onPress={handleEmailAuth}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <>
+                                        <Text style={styles.buttonText}>
+                                            {emailMode === 'signup' ? 'Register Now' : 'Login with Email'}
+                                        </Text>
+                                        <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                                    </>
+                                )}
+                            </Pressable>
+
+                            <Pressable
+                                style={styles.subSwitchBtn}
+                                onPress={() => setEmailMode(emailMode === 'login' ? 'signup' : 'login')}
+                            >
+                                <Text style={styles.subSwitchText}>
+                                    {emailMode === 'login' ? "Don't have an account? Signup" : "Already have an account? Login"}
+                                </Text>
+                            </Pressable>
+                        </>
                     ) : (
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="key-outline" size={20} color="#64748b" style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="6-digit Code"
-                                keyboardType="number-pad"
-                                value={otp}
-                                onChangeText={setOtp}
-                                maxLength={6}
-                            />
-                        </View>
+                        <>
+                            {step === 'phone' ? (
+                                <View style={styles.inputContainer}>
+                                    <View style={styles.countryCode}>
+                                        <Text style={styles.countryText}>+91</Text>
+                                    </View>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Phone Number"
+                                        keyboardType="phone-pad"
+                                        value={phone}
+                                        onChangeText={setPhone}
+                                        maxLength={10}
+                                    />
+                                </View>
+                            ) : (
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="key-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="6-digit Code"
+                                        keyboardType="number-pad"
+                                        value={otp}
+                                        onChangeText={setOtp}
+                                        maxLength={6}
+                                    />
+                                </View>
+                            )}
+
+                            <Pressable
+                                style={[styles.button, loading && styles.buttonDisabled]}
+                                onPress={step === 'phone' ? handleSendOTP : handleVerifyOTP}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <>
+                                        <Text style={styles.buttonText}>{step === 'phone' ? 'Send OTP' : 'Verify & Login'}</Text>
+                                        <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                                    </>
+                                )}
+                            </Pressable>
+                        </>
                     )}
 
-                    <Pressable
-                        style={[styles.button, loading && styles.buttonDisabled]}
-                        onPress={step === 'phone' ? handleSendOTP : handleVerifyOTP}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <>
-                                <Text style={styles.buttonText}>{step === 'phone' ? 'Send OTP' : 'Verify & Login'}</Text>
-                                <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
-                            </>
-                        )}
-                    </Pressable>
-
-                    {step === 'otp' && (
+                    {step === 'otp' && loginMode === 'phone' && (
                         <Pressable style={styles.resendBtn} onPress={() => setStep('phone')}>
                             <Text style={styles.resendText}>Change Phone Number</Text>
                         </Pressable>
                     )}
+
+                    <Pressable
+                        style={styles.switchModeBtn}
+                        onPress={() => {
+                            setLoginMode(loginMode === 'phone' ? 'email' : 'phone');
+                            setStep('phone');
+                        }}
+                    >
+                        <Text style={styles.switchModeText}>
+                            {loginMode === 'phone' ? 'Use Email & Password' : 'Use Phone Number'}
+                        </Text>
+                    </Pressable>
 
                     <View style={styles.divider}>
                         <View style={styles.dividerLine} />
@@ -179,7 +298,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                     </Pressable>
 
                     <Text style={styles.infoText}>
-                        Note: Make sure "Phone" authentication is enabled in your Firebase Console.
+                        Note: Make sure the selected method is enabled in your Firebase Console.
                     </Text>
                 </View>
             </View>
@@ -209,26 +328,18 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 30,
     },
-    logoIcon: {
-        width: 80,
-        height: 80,
-        borderRadius: 24,
-        backgroundColor: '#2563eb',
+    logoContainer: {
+        width: 140,
+        height: 140,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
-        elevation: 8,
-        shadowColor: '#2563eb',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
+        marginBottom: 10,
     },
     logoImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 24,
+        width: 140,
+        height: 140,
     },
     title: {
         fontSize: 28,
@@ -323,6 +434,29 @@ const styles = StyleSheet.create({
         color: '#2563eb',
         fontSize: 14,
         fontWeight: '600',
+    },
+    switchModeBtn: {
+        marginTop: 15,
+        alignItems: 'center',
+        paddingVertical: 10,
+    },
+    switchModeText: {
+        color: '#2563eb',
+        fontSize: 15,
+        fontWeight: '700',
+        textDecorationLine: 'underline',
+    },
+    subSwitchBtn: {
+        marginTop: 15,
+        alignItems: 'center',
+    },
+    subSwitchText: {
+        color: '#64748b',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    eyeBtn: {
+        padding: 5,
     },
     guestButton: {
         height: 56,

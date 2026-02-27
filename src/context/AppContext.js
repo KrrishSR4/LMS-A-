@@ -1,8 +1,3 @@
-/**
- * App context - manages all LMS state with AsyncStorage persistence.
- * Simulates session: clear on app reload, persist during session.
- * Ready for backend: replace storage calls with API calls.
- */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { clearSession, getItem, setItem } from '../utils/storage';
 import { STORAGE_KEYS } from '../constants';
@@ -17,7 +12,10 @@ import {
   LIVE_LECTURE_BANNER,
 } from '../mockData';
 import { generateId } from '../utils/helpers';
-import { supabase } from '../services/supabase';
+// Bhai, ab Firebase use karenge
+import { auth, storage } from '../services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const AppContext = createContext(null);
 
@@ -44,66 +42,46 @@ export const AppProvider = ({ children }) => {
   const [bankAccount, setBankAccount] = useState({ balance: 0, accountName: '', accountNumber: '', bankName: '' });
   const [session, setSession] = useState(null);
 
-  // Supabase Auth Listener
+  // Firebase Auth Listener
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        // Update local profile with Supabase user data
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setSession(user);
+      if (user) {
         setProfile(prev => ({
           ...prev,
-          id: session.user.id,
-          phone: session.user.phone,
-        }));
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        setProfile(prev => ({
-          ...prev,
-          id: session.user.id,
-          phone: session.user.phone,
+          id: user.uid,
+          phone: user.phoneNumber,
         }));
       } else {
         setProfile(DEFAULT_PROFILE);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return unsubscribe;
   }, []);
 
-  // Upload File Logic (Supabase Storage)
+  // Upload File Logic (Firebase Storage)
   const uploadFile = useCallback(async (fileUri, fileName) => {
     try {
-      const formData = new FormData();
-      formData.append('file', {
-        uri: fileUri,
-        name: fileName,
-        type: 'image/jpeg', // Default or detect
-      });
+      // Fetch the file to get a blob
+      const response = await fetch(fileUri);
+      const blob = await response.blob();
 
-      const { data, error } = await supabase.storage
-        .from('attachments')
-        .upload(`${profile.id}/${Date.now()}_${fileName}`, formData);
+      const path = `attachments/${profile.id || 'anonymous'}/${Date.now()}_${fileName}`;
+      const storageRef = ref(storage, path);
 
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('attachments')
-        .getPublicUrl(data.path);
+      const uploadTask = await uploadBytesResumable(storageRef, blob);
+      const publicUrl = await getDownloadURL(uploadTask.ref);
 
       return publicUrl;
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('Firebase Upload failed:', error);
       return null;
     }
   }, [profile.id]);
+
   useEffect(() => {
     const init = async () => {
-      // NOTE: For demo purposes, we can choose to clear or keep. 
-      // Let's change it to LOAD if exists, otherwise use defaults.
       const storedGroups = await getItem(STORAGE_KEYS.GROUPS);
       const storedMessages = await getItem(STORAGE_KEYS.MESSAGES);
       const storedPending = await getItem(STORAGE_KEYS.PENDING_STUDENTS);
@@ -133,7 +111,6 @@ export const AppProvider = ({ children }) => {
       setProfile({ ...DEFAULT_PROFILE });
       setLiveLecture(storedLiveLecture || { ...LIVE_LECTURE_BANNER });
 
-      // Init fees for existing students if not stored
       if (storedFees) {
         setFees(storedFees);
       } else {
@@ -150,7 +127,6 @@ export const AppProvider = ({ children }) => {
     init();
   }, []);
 
-  // Simulate typing indicator
   const simulateTyping = useCallback((groupId, username) => {
     setIsTyping(prev => ({
       ...prev,
@@ -165,7 +141,6 @@ export const AppProvider = ({ children }) => {
     }, 3000);
   }, []);
 
-  // Persist state changes to AsyncStorage (session-like)
   const persist = useCallback(async () => {
     await setItem(STORAGE_KEYS.GROUPS, groups);
     await setItem(STORAGE_KEYS.MESSAGES, messages);
@@ -185,12 +160,10 @@ export const AppProvider = ({ children }) => {
     if (isReady) persist();
   }, [isReady, groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount]);
 
-  // Role
   const setRoleAndPersist = useCallback((r) => {
     setRole(r);
   }, []);
 
-  // Groups
   const addGroup = useCallback((name) => {
     const id = generateId();
     setGroups((prev) => [...prev, { id, name, createdAt: Date.now() }]);
@@ -225,7 +198,6 @@ export const AppProvider = ({ children }) => {
     });
   }, []);
 
-  // Group settings
   const updateGroupSettings = useCallback((groupId, key, value) => {
     setSettings((prev) => ({
       ...prev,
@@ -233,7 +205,6 @@ export const AppProvider = ({ children }) => {
     }));
   }, []);
 
-  // Student approval - Enforce One Student : One Group
   const assignStudentToGroup = useCallback((studentId, groupId) => {
     const student = pendingStudents.find((s) => s.id === studentId) || students[studentId];
     if (!student) return;
@@ -249,11 +220,9 @@ export const AppProvider = ({ children }) => {
 
     setGroupMembers((prev) => {
       const next = { ...prev };
-      // Remove student from ALL groups first (Exclusivity Rule)
       Object.keys(next).forEach(gid => {
         next[gid] = (next[gid] || []).filter(id => id !== studentId);
       });
-      // Add to the new target group
       next[groupId] = [...(next[groupId] || []), studentId];
       return next;
     });
@@ -261,7 +230,6 @@ export const AppProvider = ({ children }) => {
     setPendingStudents((prev) => prev.filter((s) => s.id !== studentId));
   }, [pendingStudents, students]);
 
-  // Messages
   const addMessage = useCallback((groupId, msg) => {
     setMessages((prev) => ({
       ...prev,
@@ -303,14 +271,12 @@ export const AppProvider = ({ children }) => {
             if (o.votes.includes(voterId)) return o;
             return { ...o, votes: [...o.votes, voterId] };
           });
-          // Remove vote from other options
           return { ...m, options };
         }),
       };
     });
   }, []);
 
-  // Student control
   const disableStudent = useCallback((studentId) => {
     setDisabledStudents((prev) =>
       prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
@@ -324,18 +290,14 @@ export const AppProvider = ({ children }) => {
     }));
   }, []);
 
-  // Profile (student)
   const updateProfile = useCallback((updates) => {
     setProfile((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  // Fees Management logic
   const collectFee = useCallback((studentId) => {
     setFees((prev) => {
       const studentFee = prev[studentId] || { amount: 0 };
       const updated = { ...prev, [studentId]: { ...studentFee, status: 'paid' } };
-
-      // Add to bank balance (prototype)
       setBankAccount(bank => ({ ...bank, balance: bank.balance + studentFee.amount }));
       return updated;
     });
@@ -343,7 +305,6 @@ export const AppProvider = ({ children }) => {
 
   const sendFeeReminder = useCallback((studentId) => {
     const student = students[studentId];
-    // In a real app, this would trigger a push notification/SMS
     console.log(`Reminder sent to ${student?.name} for amount: ${fees[studentId]?.amount}`);
   }, [students, fees]);
 

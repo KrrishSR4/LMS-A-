@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     View,
     Text,
@@ -13,10 +13,15 @@ import {
     Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../services/supabase';
+import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import { auth } from '../../services/firebase';
+import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useApp } from '../../context/AppContext';
 
 const { width } = Dimensions.get('window');
+
+// Bhai, Firebase config yahan se uthayenge
+import firebaseApp from '../../services/firebase';
 
 export const PhoneLoginScreen = ({ navigation }) => {
     const { setRole } = useApp();
@@ -24,20 +29,23 @@ export const PhoneLoginScreen = ({ navigation }) => {
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('phone'); // 'phone' or 'otp'
     const [loading, setLoading] = useState(false);
+    const [verificationId, setVerificationId] = useState(null);
+    const recaptchaVerifier = useRef(null);
 
     const handleSendOTP = async () => {
         if (!phone || phone.length < 10) {
-            Alert.alert('Error', 'Please enter a valid phone number');
+            Alert.alert('Error', 'Please enter a valid 10-digit phone number');
             return;
         }
 
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithOtp({
-                phone: `+91${phone}`, // Assuming India for now
-            });
-
-            if (error) throw error;
+            const phoneProvider = new PhoneAuthProvider(auth);
+            const vId = await phoneProvider.verifyPhoneNumber(
+                `+91${phone}`,
+                recaptchaVerifier.current
+            );
+            setVerificationId(vId);
             setStep('otp');
             Alert.alert('Success', 'Verification code sent!');
         } catch (error) {
@@ -55,21 +63,13 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            const { data, error } = await supabase.auth.verifyOtp({
-                phone: `+91${phone}`,
-                token: otp,
-                type: 'sms',
-            });
+            const credential = PhoneAuthProvider.credential(verificationId, otp);
+            await signInWithCredential(auth, credential);
 
-            if (error) throw error;
-
-            // In a real app, you'd check profile role from metadata or profiles table
-            // For now, let's ask or assume based on user preference or a prompt
             Alert.alert('Success', 'Logged in successfully!', [
                 {
                     text: 'Continue',
                     onPress: () => {
-                        // For simplicity, let's go to role selection (Entry) or decide here
                         setRole('student');
                         navigation.replace('App');
                     }
@@ -87,16 +87,17 @@ export const PhoneLoginScreen = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
+            <FirebaseRecaptchaVerifierModal
+                ref={recaptchaVerifier}
+                firebaseConfig={firebaseApp.options}
+                attemptInvisibleRetries={5}
+            />
+
             <View style={styles.bgDecoration} />
 
             <View style={styles.content}>
                 <View style={styles.header}>
                     <View style={styles.logoIcon}>
-                        {/* 
-                          Bhai, logo.png abhi missing hai isliye app crash ho rhi thi.
-                          Maine default icon vapas laga diya hai fallback ke liye.
-                          Jaise hi aap logo.png assets folder me dalेंगे, ye image dikhne lagegi.
-                        */}
                         <Image
                             source={{ uri: 'https://placehold.co/400x400/2563eb/ffffff?text=LMS' }}
                             style={styles.logoImage}
@@ -178,7 +179,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                     </Pressable>
 
                     <Text style={styles.infoText}>
-                        Note: If you get "unsupported phone provider", please enable "Phone" in Supabase Auth Dashboard.
+                        Note: Make sure "Phone" authentication is enabled in your Firebase Console.
                     </Text>
                 </View>
             </View>
@@ -312,6 +313,16 @@ const styles = StyleSheet.create({
         color: '#94a3b8',
         fontSize: 12,
         fontWeight: '700',
+    },
+    resendBtn: {
+        alignItems: 'center',
+        paddingVertical: 10,
+        marginBottom: 10,
+    },
+    resendText: {
+        color: '#2563eb',
+        fontSize: 14,
+        fontWeight: '600',
     },
     guestButton: {
         height: 56,

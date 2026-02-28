@@ -19,7 +19,8 @@ import {
     PhoneAuthProvider,
     signInWithCredential,
     signInWithEmailAndPassword,
-    createUserWithEmailAndPassword
+    createUserWithEmailAndPassword,
+    updateProfile
 } from 'firebase/auth';
 import { useApp } from '../../context/AppContext';
 import firebaseApp from '../../services/firebase';
@@ -28,9 +29,10 @@ const logoAsset = require('../../../assets/logo.png');
 const { width } = Dimensions.get('window');
 
 export const PhoneLoginScreen = ({ navigation }) => {
-    const { setRole } = useApp();
+    const { setRole, trackLogin } = useApp();
     const [loginMode, setLoginMode] = useState('phone'); // 'phone' | 'email'
     const [emailMode, setEmailMode] = useState('login'); // 'login' | 'signup'
+    const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -40,6 +42,13 @@ export const PhoneLoginScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [verificationId, setVerificationId] = useState(null);
     const recaptchaVerifier = useRef(null);
+
+    const checkAdmin = (identifier) => {
+        const adminCredentials = ['9304767761', 'krishmishra9801@gmail.com'];
+        // Cleaner check for phone (strip +91 if present)
+        const cleanId = identifier.replace('+91', '').toLowerCase().trim();
+        return adminCredentials.some(cred => cleanId.includes(cred.toLowerCase().trim()));
+    };
 
     const handleSendOTP = async () => {
         if (!phone || phone.length < 10) {
@@ -74,16 +83,29 @@ export const PhoneLoginScreen = ({ navigation }) => {
         }
         setLoading(true);
         try {
+            let userObj;
             if (emailMode === 'signup') {
                 console.log('Registering user:', email);
-                await createUserWithEmailAndPassword(auth, email, password);
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                userObj = cred.user;
+                // Bhai, Firebase profile mein bhi name save kar dete hain
+                await updateProfile(userObj, { displayName: fullName });
                 Alert.alert('Success', 'Account ban gaya bhai! Ab aap login ho gaye hain.');
             } else {
                 console.log('Logging in user:', email);
-                await signInWithEmailAndPassword(auth, email, password);
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                userObj = cred.user;
             }
-            setRole('student');
-            navigation.replace('App');
+
+            const isAdmin = checkAdmin(email); // Assuming checkAdmin can handle email too
+            const userRole = isAdmin ? 'admin' : 'student';
+            setRole(userRole);
+            trackLogin({
+                name: emailMode === 'signup' ? fullName : (userObj.displayName || email),
+                email,
+                role: userRole,
+                id: userObj.uid
+            });
         } catch (error) {
             console.error('Email Auth Error:', error);
             let msg = error.message;
@@ -106,17 +128,14 @@ export const PhoneLoginScreen = ({ navigation }) => {
         setLoading(true);
         try {
             const credential = PhoneAuthProvider.credential(verificationId, otp);
-            await signInWithCredential(auth, credential);
+            const userCred = await signInWithCredential(auth, credential);
 
-            Alert.alert('Success', 'Logged in successfully!', [
-                {
-                    text: 'Continue',
-                    onPress: () => {
-                        setRole('student');
-                        navigation.replace('App');
-                    }
-                }
-            ]);
+            const isAdmin = checkAdmin(phone);
+            const userRole = isAdmin ? 'admin' : 'student';
+            setRole(userRole);
+            trackLogin({ phone, role: userRole, id: userCred.user.uid });
+
+            Alert.alert('Success', 'Logged in successfully!');
         } catch (error) {
             Alert.alert('Error', error.message);
         } finally {
@@ -161,6 +180,18 @@ export const PhoneLoginScreen = ({ navigation }) => {
                 <View style={styles.form}>
                     {loginMode === 'email' ? (
                         <>
+                            {emailMode === 'signup' && (
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Full Name"
+                                        value={fullName}
+                                        onChangeText={setFullName}
+                                        autoCapitalize="words"
+                                    />
+                                </View>
+                            )}
                             <View style={styles.inputContainer}>
                                 <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
                                 <TextInput
@@ -283,22 +314,12 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
                     <View style={styles.divider}>
                         <View style={styles.dividerLine} />
-                        <Text style={styles.dividerText}>OR</Text>
+                        <Text style={styles.dividerText}>SECURE LOGIN</Text>
                         <View style={styles.dividerLine} />
                     </View>
 
-                    <Pressable
-                        style={styles.guestButton}
-                        onPress={() => {
-                            setRole('student');
-                            navigation.replace('App');
-                        }}
-                    >
-                        <Text style={styles.guestButtonText}>Try Demo Mode (Bypass Auth)</Text>
-                    </Pressable>
-
                     <Text style={styles.infoText}>
-                        Note: Make sure the selected method is enabled in your Firebase Console.
+                        Bhai, security ke liye specific admin credentials hi access rakhenge.
                     </Text>
                 </View>
             </View>

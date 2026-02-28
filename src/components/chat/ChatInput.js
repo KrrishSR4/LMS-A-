@@ -17,7 +17,7 @@ export const ChatInputControlled = ({
   placeholder = 'Message',
   disabled,
 }) => {
-  const { uploadFile } = useApp();
+  const { uploadFile, theme } = useApp();
   const [isTyping, setIsTyping] = useState(false);
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
@@ -125,7 +125,7 @@ export const ChatInputControlled = ({
       <Animated.View style={[styles.sendCircle, { transform: [{ scale: scaleAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }]}>
         <Pressable
           onPress={isTyping ? handleSend : null}
-          style={[styles.mainBtn, !isTyping && styles.micBtn]}
+          style={[styles.mainBtn, { backgroundColor: theme.primary }, !isTyping && styles.micBtn]}
         >
           <Ionicons
             name={isTyping ? "send" : "mic"}
@@ -197,6 +197,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   micBtn: {
-    backgroundColor: '#2563eb',
+    // keeping it the same as mainBtn but could be different if needed
   },
 });

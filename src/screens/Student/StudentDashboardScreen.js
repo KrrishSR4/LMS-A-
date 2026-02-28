@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
  * Student dashboard - joined groups, live lecture, announcements.
  */
 export const StudentDashboardScreen = ({ navigation }) => {
-  const { groups, groupMembers, profile, messages, liveLecture, fees } = useApp();
+  const { groups, groupMembers, profile, messages, liveLecture, fees, theme } = useApp();
 
   const displayGroups =
     groups?.filter((g) => (groupMembers[g.id] || []).includes(profile?.id || 'current_user')) || groups || [];
@@ -28,7 +28,7 @@ export const StudentDashboardScreen = ({ navigation }) => {
           <Text style={styles.welcomeText}>Hello, {profile?.name || 'Student'} 👋</Text>
           <Text style={styles.welcomeSub}>How is your day going? Ready to study?</Text>
         </View>
-        <Pressable style={styles.profileIndicator}>
+        <Pressable style={[styles.profileIndicator, { backgroundColor: theme.primary, borderColor: theme.primary + '30' }]}>
           <Text style={styles.profileText}>{profile?.name?.charAt(0) || 'S'}</Text>
         </Pressable>
       </View>
@@ -56,7 +56,7 @@ export const StudentDashboardScreen = ({ navigation }) => {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>My Groups</Text>
-        <Pressable><Text style={styles.seeAll}>See All</Text></Pressable>
+        <Pressable><Text style={[styles.seeAll, { color: theme.primary }]}>See All</Text></Pressable>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.groupsScroll} contentContainerStyle={{ paddingRight: 20 }}>
@@ -76,7 +76,7 @@ export const StudentDashboardScreen = ({ navigation }) => {
               </View>
               <Text style={styles.groupName} numberOfLines={1}>{g.name}</Text>
               <Text style={styles.groupMeta}>Interactive Class</Text>
-              <View style={styles.goBtn}>
+              <View style={[styles.goBtn, { backgroundColor: theme.primary }]}>
                 <Ionicons name="arrow-forward" size={16} color="#fff" />
               </View>
             </Pressable>
@@ -93,9 +93,9 @@ export const StudentDashboardScreen = ({ navigation }) => {
       ) : (
         pinnedAnnouncements.slice(0, 3).map((m) => (
           <Pressable key={m.id} style={styles.announCard}>
-            <View style={styles.announIndicator} />
+            <View style={[styles.announIndicator, { backgroundColor: theme.primary }]} />
             <View style={styles.announContent}>
-              <Text style={styles.annGroup}>{m.groupName}</Text>
+              <Text style={[styles.annGroup, { color: theme.primary }]}>{m.groupName}</Text>
               <Text style={styles.annText} numberOfLines={2}>{m.text}</Text>
               <Text style={styles.annDate}>Today, 10:30 AM</Text>
             </View>
@@ -123,11 +123,9 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#2563eb',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#dbeafe',
   },
   profileText: { color: '#fff', fontSize: 18, fontWeight: '800' },
   sectionHeader: {

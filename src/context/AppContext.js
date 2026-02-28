@@ -10,11 +10,12 @@ import {
   getInitialMessages,
   getDefaultGroupSettings,
   LIVE_LECTURE_BANNER,
+  THEMES,
 } from '../mockData';
 import { generateId } from '../utils/helpers';
 // Bhai, ab Firebase use karenge
 import { auth, storage } from '../services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const AppContext = createContext(null);
@@ -41,24 +42,81 @@ export const AppProvider = ({ children }) => {
   const [fees, setFees] = useState({}); // { studentId: { amount: number, status: 'pending'|'paid', dueDate: string } }
   const [bankAccount, setBankAccount] = useState({ balance: 0, accountName: '', accountNumber: '', bankName: '' });
   const [session, setSession] = useState(null);
+  const [recentLogins, setRecentLogins] = useState([]); // Array of { name, time, role }
+  const [theme, setTheme] = useState(THEMES.indigo);
 
   // Firebase Auth Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setSession(user);
       if (user) {
-        setProfile(prev => ({
-          ...prev,
-          id: user.uid,
-          phone: user.phoneNumber,
-        }));
+        setProfile(prev => {
+          const enrolledUser = students[user.uid] || {};
+          // Bhai, pending students mein bhi check kar lo
+          const pendingUser = (pendingStudents || []).find(s => s.id === user.uid) || {};
+
+          return {
+            ...prev,
+            id: user.uid,
+            name: enrolledUser.name || pendingUser.name || user.displayName || prev.name || 'Student',
+            phone: user.phoneNumber || enrolledUser.phone || pendingUser.phone || prev.phone,
+            email: user.email || enrolledUser.email || pendingUser.email || prev.email,
+          };
+        });
       } else {
         setProfile(DEFAULT_PROFILE);
+        setRole('student');
       }
     });
 
     return unsubscribe;
   }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      await clearSession();
+      setRole('student');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, []);
+
+  const trackLogin = useCallback((userData) => {
+    if (userData.role === 'student') {
+      const studentId = userData.id || auth.currentUser?.uid || generateId();
+
+      setRecentLogins(prev => [{
+        id: generateId(),
+        name: userData.name || userData.email || userData.phone || 'New Student',
+        time: new Date().toLocaleTimeString(),
+        role: 'student'
+      }, ...prev].slice(0, 10));
+
+      // Bhai, agar profile mein name nahi hai toh update karo
+      setProfile(prev => ({
+        ...prev,
+        name: userData.name || prev.name || 'Student',
+        email: userData.email || prev.email,
+      }));
+
+      // Bhai, agar naya student hai aur pending nahi hai, toh add karo
+      setPendingStudents(prev => {
+        const isAlreadyPending = prev.some(s => s.id === studentId);
+        const isAssigned = Object.values(groupMembers).some(m => m.includes(studentId));
+
+        if (!isAlreadyPending && !isAssigned) {
+          return [...prev, {
+            id: studentId,
+            name: userData.name || userData.email || userData.phone || 'New Student',
+            phone: userData.phone || userData.email || 'Signup',
+            requestedAt: Date.now(),
+          }];
+        }
+        return prev;
+      });
+    }
+  }, [groupMembers]);
 
   // Upload File Logic (Firebase Storage)
   const uploadFile = useCallback(async (fileUri, fileName) => {
@@ -92,11 +150,12 @@ export const AppProvider = ({ children }) => {
       const storedLiveLecture = await getItem(STORAGE_KEYS.LIVE_LECTURE);
       const storedFees = await getItem('lms_fees');
       const storedBank = await getItem('lms_bank');
+      const storedTheme = await getItem('lms_theme');
 
       setGroups(storedGroups || [...DEFAULT_GROUPS]);
       setPendingStudents(storedPending || [...DEFAULT_PENDING_STUDENTS]);
       setGroupMembers(storedMembers || { ...DEFAULT_GROUP_MEMBERS });
-      setStudents(storedStudents || { ...DEFAULT_STUDENTS, current_user: { ...DEFAULT_PROFILE } });
+      setStudents(storedStudents || { ...DEFAULT_STUDENTS });
       setMessages(storedMessages || getInitialMessages());
 
       if (storedSettings) {
@@ -108,7 +167,6 @@ export const AppProvider = ({ children }) => {
       }
 
       setRole(storedRole || 'student');
-      setProfile({ ...DEFAULT_PROFILE });
       setLiveLecture(storedLiveLecture || { ...LIVE_LECTURE_BANNER });
 
       if (storedFees) {
@@ -121,6 +179,7 @@ export const AppProvider = ({ children }) => {
         setFees(initialFees);
       }
       setBankAccount(storedBank || { balance: 0, accountName: 'Admin Primary', accountNumber: '**** 8899', bankName: 'HDFC Bank' });
+      if (storedTheme) setTheme(storedTheme);
 
       setIsReady(true);
     };
@@ -154,14 +213,16 @@ export const AppProvider = ({ children }) => {
     await setItem(STORAGE_KEYS.LIVE_LECTURE, liveLecture);
     await setItem('lms_fees', fees);
     await setItem('lms_bank', bankAccount);
-  }, [groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount]);
+    await setItem('lms_theme', theme);
+  }, [groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount, theme]);
 
   useEffect(() => {
     if (isReady) persist();
-  }, [isReady, groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount]);
+  }, [isReady, groups, messages, pendingStudents, groupMembers, settings, profile, role, disabledStudents, students, liveLecture, fees, bankAccount, theme]);
 
-  const setRoleAndPersist = useCallback((r) => {
+  const setRoleAndPersist = useCallback(async (r) => {
     setRole(r);
+    await setItem(STORAGE_KEYS.ROLE, r);
   }, []);
 
   const addGroup = useCallback((name) => {
@@ -356,6 +417,11 @@ export const AppProvider = ({ children }) => {
     payFee,
     session,
     uploadFile,
+    logout,
+    trackLogin,
+    recentLogins,
+    theme,
+    setTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

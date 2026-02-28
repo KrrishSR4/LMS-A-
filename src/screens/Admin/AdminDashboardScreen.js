@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
  * Admin dashboard - overview stats and quick actions.
  */
 export const AdminDashboardScreen = ({ navigation }) => {
-  const { groups, pendingStudents, groupMembers, broadcastMessage } = useApp();
+  const { groups, pendingStudents, groupMembers, broadcastMessage, recentLogins, theme } = useApp();
   const [showBroadcast, setShowBroadcast] = React.useState(false);
   const [broadcastText, setBroadcastText] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -38,7 +38,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
   return (
     <>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <View style={styles.headerBackground}>
+        <View style={[styles.headerBackground, { backgroundColor: theme.primary }]}>
           <Text style={styles.welcomeText}>Admin Management</Text>
           <Text style={styles.headerSub}>Everything looks great today! ✨</Text>
         </View>
@@ -131,6 +131,25 @@ export const AdminDashboardScreen = ({ navigation }) => {
           </Pressable>
         </View>
 
+        <Text style={styles.sectionTitle}>Recent Student Logins</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.loginsScroll}>
+          {recentLogins?.length > 0 ? (
+            recentLogins.map((login) => (
+              <View key={login.id} style={styles.loginCard}>
+                <View style={[styles.loginIconBg, { backgroundColor: theme.primary + '15' }]}>
+                  <Ionicons name="person" size={20} color={theme.primary} />
+                </View>
+                <Text style={styles.loginName} numberOfLines={1}>{login.name}</Text>
+                <Text style={styles.loginTime}>{login.time}</Text>
+              </View>
+            ))
+          ) : (
+            <View style={styles.noLogins}>
+              <Text style={styles.noLoginsText}>No recent logins yet</Text>
+            </View>
+          )}
+        </ScrollView>
+
         <Text style={styles.sectionTitle}>Groups List</Text>
         {groups?.map((g) => (
           <Card
@@ -148,7 +167,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
                   {(groupMembers[g.id] || []).length} members
                 </Text>
               </View>
-              <Ionicons name="arrow-forward-circle-outline" size={24} color="#2563eb" />
+              <Ionicons name="arrow-forward-circle-outline" size={24} color={theme.primary} />
             </View>
           </Card>
         ))}
@@ -183,7 +202,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </Pressable>
               <Pressable
-                style={[styles.modalBtn, styles.sendBtn, !broadcastText.trim() && { opacity: 0.6 }]}
+                style={[styles.modalBtn, styles.sendBtn, { backgroundColor: theme.primary }, !broadcastText.trim() && { opacity: 0.6 }]}
                 onPress={handleBroadcast}
                 disabled={!broadcastText.trim() || loading}
               >
@@ -201,7 +220,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f1f5f9' },
   content: { paddingBottom: 32 },
   headerBackground: {
-    backgroundColor: '#2563eb',
     paddingTop: 40,
     paddingBottom: 80,
     paddingHorizontal: 24,
@@ -257,6 +275,58 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 16,
+  },
+  loginsScroll: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  loginCard: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 20,
+    marginRight: 12,
+    width: 100,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  loginIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#eff6ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  loginName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0f172a',
+    textAlign: 'center',
+  },
+  loginTime: {
+    fontSize: 10,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  noLogins: {
+    padding: 20,
+    backgroundColor: '#f8fafc',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+    width: Dimensions.get('window').width - 32,
+    alignItems: 'center',
+  },
+  noLoginsText: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: '500',
   },
   actionsGrid: {
     flexDirection: 'row',

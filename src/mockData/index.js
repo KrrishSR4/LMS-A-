@@ -13,30 +13,18 @@ export const DEFAULT_GROUPS = [
 ];
 
 // Pending students awaiting group assignment
-export const DEFAULT_PENDING_STUDENTS = [
-  { id: 'ps1', name: 'Rahul Sharma', phone: '+91 98765 43210', requestedAt: Date.now() - 3600000 },
-  { id: 'ps2', name: 'Priya Singh', phone: '+91 87654 32109', requestedAt: Date.now() - 7200000 },
-  { id: 'ps3', name: 'Amit Kumar', phone: '+91 76543 21098', requestedAt: Date.now() - 1800000 },
-];
+export const DEFAULT_PENDING_STUDENTS = [];
 
 // Group members mapping: groupId -> [studentIds]
-// current_user = demo student (when in Student mode)
 export const DEFAULT_GROUP_MEMBERS = {
-  g1: ['s1', 's2', 'current_user'],
-  g2: ['s3', 's4', 'current_user'],
-  g3: ['s5', 's6', 'current_user'],
+  g1: [],
+  g2: [],
+  g3: [],
 };
 
 // Student profiles (used across groups)
-// current_user = logged-in student in demo mode
 export const DEFAULT_STUDENTS = {
-  current_user: { id: 'current_user', name: 'Demo Student', phone: '+91 99999 00000', avatar: null },
-  s1: { id: 's1', name: 'Arjun Mehta', phone: '+91 99999 11111', avatar: null },
-  s2: { id: 's2', name: 'Kavya Patel', phone: '+91 88888 22222', avatar: null },
-  s3: { id: 's3', name: 'Vikram Reddy', phone: '+91 77777 33333', avatar: null },
-  s4: { id: 's4', name: 'Neha Gupta', phone: '+91 66666 44444', avatar: null },
-  s5: { id: 's5', name: 'Rohan Desai', phone: '+91 55555 55555', avatar: null },
-  s6: { id: 's6', name: 'Ananya Iyer', phone: '+91 44444 66666', avatar: null },
+  // current_user: { id: 'current_user', name: 'Demo Student', phone: '+91 99999 00000', avatar: null },
 };
 
 // Default group settings
@@ -50,9 +38,10 @@ export const getDefaultGroupSettings = (groupId) => ({
 
 // Current user profile (when in Student mode)
 export const DEFAULT_PROFILE = {
-  id: 'current_user',
-  name: 'Demo Student',
-  phone: '+91 99999 00000',
+  id: 'temp_user',
+  name: 'Student',
+  phone: '',
+  email: '',
   avatar: null,
 };
 
@@ -129,6 +118,44 @@ export const getInitialMessages = () => {
 };
 
 // Live lecture banner mock
+export const THEMES = {
+  indigo: {
+    id: 'indigo',
+    name: 'Indigo Classic',
+    primary: '#2563eb',
+    secondary: '#dbeafe',
+    text: '#1e293b',
+  },
+  emerald: {
+    id: 'emerald',
+    name: 'Emerald Clean',
+    primary: '#10b981',
+    secondary: '#d1fae5',
+    text: '#064e3b',
+  },
+  rose: {
+    id: 'rose',
+    name: 'Rose Pink',
+    primary: '#f43f5e',
+    secondary: '#ffe4e6',
+    text: '#881337',
+  },
+  amber: {
+    id: 'amber',
+    name: 'Amber Gold',
+    primary: '#f59e0b',
+    secondary: '#fef3c7',
+    text: '#78350f',
+  },
+  violet: {
+    id: 'violet',
+    name: 'Deep Violet',
+    primary: '#8b5cf6',
+    secondary: '#ede9fe',
+    text: '#4c1d95',
+  },
+};
+
 export const LIVE_LECTURE_BANNER = {
   active: true,
   title: 'Mathematics - Quadratic Equations',

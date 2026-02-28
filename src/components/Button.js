@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useApp } from '../context/AppContext';
 
 /**
  * Primary and secondary button component.
@@ -11,24 +12,35 @@ export const Button = ({
   disabled = false,
   loading = false,
   style,
-}) => (
-  <Pressable
-    onPress={onPress}
-    disabled={disabled || loading}
-    style={({ pressed }) => [
-      styles.btn,
-      variant === 'primary' ? styles.primary : styles.secondary,
-      (pressed || disabled) && styles.pressed,
-      style,
-    ]}
-  >
-    {loading ? (
-      <ActivityIndicator color={variant === 'primary' ? '#fff' : '#2563eb'} />
-    ) : (
-      <Text style={[styles.text, variant === 'secondary' && styles.textSecondary]}>{title}</Text>
-    )}
-  </Pressable>
-);
+}) => {
+  const { theme } = useApp();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled || loading}
+      style={({ pressed }) => [
+        styles.btn,
+        variant === 'primary'
+          ? { backgroundColor: theme.primary }
+          : { backgroundColor: 'transparent', borderWidth: 2, borderColor: theme.primary },
+        (pressed || disabled) && styles.pressed,
+        style,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={variant === 'primary' ? '#fff' : theme.primary} />
+      ) : (
+        <Text style={[
+          styles.text,
+          variant === 'secondary' && { color: theme.primary }
+        ]}>
+          {title}
+        </Text>
+      )}
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   btn: {
@@ -39,14 +51,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 48,
   },
-  primary: {
-    backgroundColor: '#2563eb',
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#2563eb',
-  },
   pressed: {
     opacity: 0.7,
   },
@@ -54,8 +58,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  textSecondary: {
-    color: '#2563eb',
   },
 });

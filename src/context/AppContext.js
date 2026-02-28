@@ -12,7 +12,8 @@ import {
   LIVE_LECTURE_BANNER,
   THEMES,
 } from '../mockData';
-import { generateId } from '../utils/helpers';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { generateId, checkAdmin } from '../utils/helpers';
 // Bhai, ab Firebase use karenge
 import { auth, storage } from '../services/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -98,14 +99,32 @@ export const AppProvider = ({ children }) => {
         ...prev,
         name: userData.name || prev.name || 'Student',
         email: userData.email || prev.email,
+        phone: userData.phone || prev.phone,
       }));
+
+      // Bhai, agar name diya hai toh enrolled storage bhi update kar do
+      if (userData.name) {
+        setStudents(prev => {
+          if (prev[studentId]) {
+            return {
+              ...prev,
+              [studentId]: { ...prev[studentId], name: userData.name }
+            };
+          }
+          return prev;
+        });
+      }
 
       // Bhai, agar naya student hai aur pending nahi hai, toh add karo
       setPendingStudents(prev => {
-        const isAlreadyPending = prev.some(s => s.id === studentId);
+        const isAlreadyPending = prev.find(s => s.id === studentId);
         const isAssigned = Object.values(groupMembers).some(m => m.includes(studentId));
 
-        if (!isAlreadyPending && !isAssigned) {
+        if (!isAssigned) {
+          if (isAlreadyPending) {
+            // Update name even if already pending
+            return prev.map(s => s.id === studentId ? { ...s, name: userData.name || s.name } : s);
+          }
           return [...prev, {
             id: studentId,
             name: userData.name || userData.email || userData.phone || 'New Student',
@@ -118,12 +137,21 @@ export const AppProvider = ({ children }) => {
     }
   }, [groupMembers]);
 
-  // Upload File Logic (Firebase Storage)
+  // Upload File Logic (Firebase Storage) - Robust Blob conversion
   const uploadFile = useCallback(async (fileUri, fileName) => {
     try {
-      // Fetch the file to get a blob
-      const response = await fetch(fileUri);
-      const blob = await response.blob();
+      // Bhai, fetch(uri) mobile pe unreliable ho sakta hai, isliye XMLHttpRequest use karenge
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => resolve(xhr.response);
+        xhr.onerror = (e) => {
+          console.error('Blob conversion error:', e);
+          reject(new TypeError('Network request failed'));
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', fileUri, true);
+        xhr.send(null);
+      });
 
       const path = `attachments/${profile.id || 'anonymous'}/${Date.now()}_${fileName}`;
       const storageRef = ref(storage, path);
@@ -137,6 +165,13 @@ export const AppProvider = ({ children }) => {
       return null;
     }
   }, [profile.id]);
+
+  const deleteMessage = useCallback((groupId, messageId) => {
+    setMessages((prev) => ({
+      ...prev,
+      [groupId]: (prev[groupId] || []).filter((m) => m.id !== messageId),
+    }));
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -152,11 +187,28 @@ export const AppProvider = ({ children }) => {
       const storedBank = await getItem('lms_bank');
       const storedTheme = await getItem('lms_theme');
 
-      setGroups(storedGroups || [...DEFAULT_GROUPS]);
-      setPendingStudents(storedPending || [...DEFAULT_PENDING_STUDENTS]);
-      setGroupMembers(storedMembers || { ...DEFAULT_GROUP_MEMBERS });
-      setStudents(storedStudents || { ...DEFAULT_STUDENTS });
-      setMessages(storedMessages || getInitialMessages());
+      setGroups(storedGroups || []);
+      setPendingStudents(storedPending || []);
+      setGroupMembers(storedMembers || {});
+      setStudents(storedStudents || {});
+
+      // Bhai, data cleanup v2 - force logout anyone to clear mocks
+      const migrationV2Done = await AsyncStorage.getItem('migration_nuclear_v2');
+      if (!migrationV2Done) {
+        await signOut(auth);
+        await clearSession();
+        await AsyncStorage.clear(); // Complete wipe
+        await AsyncStorage.setItem('migration_nuclear_v2', 'true');
+        console.log('Bhai, NUCLEAR CLEAR COMPLETE. All sessions terminated.');
+        // Re-init defaults after wipe
+        setGroups([]);
+        setPendingStudents([]);
+        setGroupMembers({});
+        setStudents({});
+        setMessages({});
+      }
+
+      setMessages(storedMessages || {});
 
       if (storedSettings) {
         setSettings(storedSettings);
@@ -403,6 +455,7 @@ export const AppProvider = ({ children }) => {
     updateGroupSettings,
     assignStudentToGroup,
     addMessage,
+    deleteMessage,
     broadcastMessage,
     pinMessage,
     votePoll,

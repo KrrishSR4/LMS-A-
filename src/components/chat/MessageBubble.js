@@ -4,125 +4,128 @@ import { View, Text, StyleSheet, Image, Pressable, Linking } from 'react-native'
 /**
  * Chat message bubble - admin vs student styling.
  */
-export const MessageBubble = ({ message, isAdmin }) => {
+export const MessageBubble = ({ message, isAdmin, onLongPress }) => {
   const isOwn = message.senderId === 'admin' || message.senderId === 'current_user';
 
-  if (message.type === 'announcement') {
-    return (
-      <View style={styles.announcement}>
-        <Text style={styles.pinBadge}>📌 Pinned</Text>
-        <Text style={styles.announcementText}>{message.text}</Text>
-        <Text style={styles.announcementSender}>— {message.senderName}</Text>
-        <Text style={styles.announcementTime}>{formatTime(message.timestamp)}</Text>
-      </View>
-    );
-  }
+  const renderContent = () => {
+    if (message.type === 'announcement') {
+      return (
+        <View style={styles.announcement}>
+          <Text style={styles.pinBadge}>📌 Pinned</Text>
+          <Text style={styles.announcementText}>{message.text}</Text>
+          <Text style={styles.announcementSender}>— {message.senderName}</Text>
+          <Text style={styles.announcementTime}>{formatTime(message.timestamp)}</Text>
+        </View>
+      );
+    }
 
-  if (message.type === 'poll') {
-    return (
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-        <Text style={styles.sender}>{message.senderName}</Text>
-        <Text style={styles.pollQuestion}>{message.question}</Text>
-        <View style={styles.pollOptions}>
-          {(message.options || []).map((o) => (
-            <View key={o.id} style={styles.pollOption}>
-              <Text style={styles.pollOptionText}>{o.text}</Text>
-              <Text style={styles.pollVotes}>{o.votes?.length || 0} votes</Text>
-            </View>
-          ))}
-        </View>
-        <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
-      </View>
-    );
-  }
-
-  if (message.type === 'image') {
-    return (
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, { padding: 4 }]}>
-        <View style={styles.mediaHeader}>
-          <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
-        </View>
-        <Image
-          source={{ uri: message.url }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <View style={styles.mediaFooter}>
-          <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (message.type === 'video') {
-    return (
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, { padding: 4 }]}>
-        <View style={styles.mediaHeader}>
-          <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
-        </View>
-        <Pressable
-          style={styles.videoPlaceholder}
-          onPress={() => Linking.openURL(message.url)}
-        >
-          <View style={styles.playButton}>
-            <Text style={{ fontSize: 32 }}>▶️</Text>
+    if (message.type === 'poll') {
+      return (
+        <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
+          <Text style={styles.sender}>{message.senderName}</Text>
+          <Text style={styles.pollQuestion}>{message.question}</Text>
+          <View style={styles.pollOptions}>
+            {(message.options || []).map((o) => (
+              <View key={o.id} style={styles.pollOption}>
+                <Text style={styles.pollOptionText}>{o.text}</Text>
+                <Text style={styles.pollVotes}>{o.votes?.length || 0} votes</Text>
+              </View>
+            ))}
           </View>
-          <Text style={styles.videoLabel}>Play Video</Text>
+          <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
+        </View>
+      );
+    }
+
+    if (message.type === 'image') {
+      return (
+        <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, { padding: 4 }]}>
+          <View style={styles.mediaHeader}>
+            <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
+          </View>
+          <Image
+            source={{ uri: message.url }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <View style={styles.mediaFooter}>
+            <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (message.type === 'video') {
+      return (
+        <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, { padding: 4 }]}>
+          <View style={styles.mediaHeader}>
+            <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
+          </View>
+          <Pressable
+            style={styles.videoPlaceholder}
+            onPress={() => Linking.openURL(message.url)}
+          >
+            <View style={styles.playButton}>
+              <Text style={{ fontSize: 32 }}>▶️</Text>
+            </View>
+            <Text style={styles.videoLabel}>Play Video</Text>
+          </Pressable>
+          <View style={styles.mediaFooter}>
+            <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (message.type === 'pdf') {
+      return (
+        <Pressable
+          style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}
+          onPress={() => message.url && Linking.openURL(message.url)}
+        >
+          <Text style={styles.sender}>{message.senderName}</Text>
+          <View style={styles.pdfPreview}>
+            <Text style={styles.pdfPlaceholder}>📄 PDF Document</Text>
+          </View>
+          {message.text ? <Text style={styles.text}>{message.text}</Text> : null}
+          <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
         </Pressable>
-        <View style={styles.mediaFooter}>
-          <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
-        </View>
-      </View>
-    );
-  }
+      );
+    }
 
-  if (message.type === 'pdf') {
+    if (message.type === 'lecture') {
+      return (
+        <Pressable
+          style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}
+          onPress={() => message.url && Linking.openURL(message.url)}
+        >
+          <Text style={styles.sender}>{message.senderName}</Text>
+          <View style={styles.lectureLink}>
+            <Text style={styles.lectureIcon}>🎥</Text>
+            <Text style={styles.lectureText}>Recorded Lecture Link</Text>
+          </View>
+          <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
+        </Pressable>
+      );
+    }
+
+    // Default: text
     return (
       <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-        <Text style={styles.sender}>{message.senderName}</Text>
-        <View style={styles.pdfPreview}>
-          <Text style={styles.pdfPlaceholder}>📄 PDF Document</Text>
-        </View>
-        {message.text ? <Text style={styles.text}>{message.text}</Text> : null}
-        <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
+        <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
+        <Text style={[styles.text, isOwn && styles.textOwn]}>{message.text}</Text>
+        <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
       </View>
     );
-  }
+  };
 
-  if (message.type === 'voice') {
-    return (
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-        <Text style={styles.sender}>{message.senderName}</Text>
-        <View style={styles.voiceBar}>
-          <Text>▶️</Text>
-          <View style={styles.voiceProgress} />
-          <Text style={styles.voiceDuration}>0:15</Text>
-        </View>
-        <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
-      </View>
-    );
-  }
-
-  if (message.type === 'lecture') {
-    return (
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-        <Text style={styles.sender}>{message.senderName}</Text>
-        <View style={styles.lectureLink}>
-          <Text style={styles.lectureIcon}>🎥</Text>
-          <Text style={styles.lectureText}>Recorded Lecture Link</Text>
-        </View>
-        <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
-      </View>
-    );
-  }
-
-  // Default: text
   return (
-    <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-      <Text style={[styles.sender, isOwn && styles.senderOwn]}>{message.senderName}</Text>
-      <Text style={[styles.text, isOwn && styles.textOwn]}>{message.text}</Text>
-      <Text style={[styles.time, isOwn && styles.senderOwn]}>{formatTime(message.timestamp)}</Text>
-    </View>
+    <Pressable
+      onLongPress={() => isAdmin && onLongPress && onLongPress(message.id)}
+      delayLongPress={500}
+    >
+      {renderContent()}
+    </Pressable>
   );
 };
 

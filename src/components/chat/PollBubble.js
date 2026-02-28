@@ -4,7 +4,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 /**
  * Poll message with interactive voting.
  */
-export const PollBubble = ({ message, onVote, voterId, isAdmin }) => {
+export const PollBubble = ({ message, onVote, voterId, isAdmin, onLongPress }) => {
   const hasVoted = (message.options || []).some((o) => o.votes?.includes(voterId));
 
   const handleVote = (optionId) => {
@@ -13,32 +13,37 @@ export const PollBubble = ({ message, onVote, voterId, isAdmin }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sender}>{message.senderName}</Text>
-      <Text style={styles.question}>{message.question}</Text>
-      <View style={styles.options}>
-        {(message.options || []).map((o) => {
-          const voted = o.votes?.includes(voterId);
-          const total = (message.options || []).reduce((s, opt) => s + (opt.votes?.length || 0), 0);
-          const pct = total > 0 ? ((o.votes?.length || 0) / total) * 100 : 0;
-          return (
-            <Pressable
-              key={o.id}
-              style={[styles.option, voted && styles.optionVoted]}
-              onPress={() => handleVote(o.id)}
-              disabled={isAdmin || hasVoted}
-            >
-              <View style={[styles.bar, { width: `${pct}%` }]} />
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>{o.text}</Text>
-                <Text style={styles.voteCount}>{o.votes?.length || 0} votes</Text>
-              </View>
-            </Pressable>
-          );
-        })}
+    <Pressable
+      onLongPress={() => isAdmin && onLongPress && onLongPress(message.id)}
+      delayLongPress={500}
+    >
+      <View style={styles.container}>
+        <Text style={styles.sender}>{message.senderName}</Text>
+        <Text style={styles.question}>{message.question}</Text>
+        <View style={styles.options}>
+          {(message.options || []).map((o) => {
+            const voted = o.votes?.includes(voterId);
+            const total = (message.options || []).reduce((s, opt) => s + (opt.votes?.length || 0), 0);
+            const pct = total > 0 ? ((o.votes?.length || 0) / total) * 100 : 0;
+            return (
+              <Pressable
+                key={o.id}
+                style={[styles.option, voted && styles.optionVoted]}
+                onPress={() => handleVote(o.id)}
+                disabled={isAdmin || hasVoted}
+              >
+                <View style={[styles.bar, { width: `${pct}%` }]} />
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionText}>{o.text}</Text>
+                  <Text style={styles.voteCount}>{o.votes?.length || 0} votes</Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
       </View>
-      <Text style={styles.time}>{formatTime(message.timestamp)}</Text>
-    </View>
+    </Pressable>
   );
 };
 

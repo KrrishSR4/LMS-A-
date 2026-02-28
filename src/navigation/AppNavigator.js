@@ -61,7 +61,7 @@ const HeaderLogo = ({ navigation }) => {
     >
       <Image
         source={require('../../assets/logo.png')}
-        style={{ width: 50, height: 50, borderRadius: 25 }}
+        style={{ width: 60, height: 60, borderRadius: 30 }}
         resizeMode="contain"
       />
     </Pressable>
@@ -73,16 +73,16 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
   return (
     <View style={{
       flexDirection: 'row',
-      backgroundColor: theme.primary,
-      height: 65,
+      backgroundColor: '#0f172a', // Solid dark slate for contrast
+      height: 70,
       borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.1)',
+      borderTopColor: 'rgba(255,255,255,0.05)',
       paddingBottom: 10,
-      elevation: 8,
+      elevation: 20,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
     }}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
@@ -101,7 +101,7 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
           }
         };
 
-        const iconColor = isFocused ? '#ffffff' : 'rgba(255,255,255,0.6)';
+        const iconColor = isFocused ? theme.primary : 'rgba(255,255,255,0.4)';
         const iconName = options.tabBarIcon ? options.tabBarIcon({ color: iconColor }).props.name : 'help-outline';
 
         return (
@@ -110,13 +110,20 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
             onPress={onPress}
             style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Ionicons name={iconName} size={24} color={iconColor} />
+            <View style={isFocused && {
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              padding: 8,
+              borderRadius: 12,
+              marginBottom: 2
+            }}>
+              <Ionicons name={iconName} size={26} color={iconColor} />
+            </View>
             <Text style={{
               color: iconColor,
-              fontSize: 10,
-              fontWeight: '700',
-              marginTop: 4,
-              opacity: isFocused ? 1 : 0.8,
+              fontSize: 11,
+              fontWeight: isFocused ? '800' : '600',
+              marginTop: 2,
+              letterSpacing: 0.3,
             }}>
               {label}
             </Text>
@@ -199,9 +206,17 @@ const MainStack = ({ role, theme }) => {
   return (
     <Stack.Navigator
       screenOptions={({ navigation, route }) => ({
-        headerStyle: { backgroundColor: theme.primary },
+        headerStyle: {
+          backgroundColor: '#0f172a', // Matching dark slate
+          height: 100,
+        },
         headerTintColor: '#ffffff',
-        headerTitleStyle: { color: '#ffffff', fontWeight: '900' },
+        headerTitleStyle: {
+          color: '#ffffff',
+          fontWeight: '900',
+          fontSize: 22,
+          letterSpacing: 0.5,
+        },
         animation: 'slide_from_right',
         headerShadowVisible: false,
         headerLeft: () => route.name === 'Main' ? <HeaderLogo navigation={navigation} /> : <HeaderBackBtn navigation={navigation} />,

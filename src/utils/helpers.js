@@ -50,3 +50,13 @@ export const formatDateSeparator = (timestamp) => {
   if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 };
+
+/**
+ * Check if identifier is an admin.
+ */
+export const checkAdmin = (identifier) => {
+  if (!identifier) return false;
+  const adminCredentials = ['9304767761', 'krishmishra9801@gmail.com'];
+  const cleanId = identifier.replace('+91', '').toLowerCase().trim();
+  return adminCredentials.some(cred => cleanId.includes(cred.toLowerCase().trim()));
+};

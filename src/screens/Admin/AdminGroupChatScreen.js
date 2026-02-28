@@ -18,8 +18,9 @@ import { PollBubble } from '../../components/chat/PollBubble';
 import { DateSeparator } from '../../components/chat/DateSeparator';
 import { LiveLectureBanner } from '../../components/chat/LiveLectureBanner';
 import { useApp } from '../../context/AppContext';
-import { isNewDay } from '../../utils/helpers';
-import { generateId } from '../../utils/helpers';
+import { isNewDay, generateId } from '../../utils/helpers';
+import * as DocumentPicker from 'expo-document-picker';
+import { Alert } from 'react-native';
 
 /**
  * Admin Group Chat - fully interactive.
@@ -31,6 +32,7 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
   const {
     messages,
     addMessage,
+    deleteMessage,
     votePoll,
     settings,
     groupMembers,
@@ -41,6 +43,7 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
     removeStudentFromGroup,
     isTyping,
     simulateTyping,
+    uploadFile,
   } = useApp();
   const [input, setInput] = useState('');
   const [showActions, setShowActions] = useState(false);
@@ -118,32 +121,62 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
     setPollOptions(['', '']);
   };
 
-  const sendAttachment = (type) => {
-    addMessage(groupId, {
-      type,
-      senderId: 'admin',
-      senderName: 'Admin',
-      text: type === 'image' ? 'Sample image' : 'Sample PDF',
-    });
+  const sendAttachment = async (type) => {
     setShowActions(false);
+    if (type === 'image') {
+      return;
+    }
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: type === 'pdf' ? 'application/pdf' : 'video/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        const publicUrl = await uploadFile(asset.uri, asset.name);
+
+        if (publicUrl) {
+          addMessage(groupId, {
+            type,
+            senderId: 'admin',
+            senderName: 'Admin',
+            url: publicUrl,
+            text: asset.name,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Document Pick error:', error);
+      Alert.alert('Error', 'Failed to pick or upload document.');
+    }
   };
 
   const sendVoice = () => {
-    addMessage(groupId, {
-      type: 'voice',
-      senderId: 'admin',
-      senderName: 'Admin',
-    });
+    Alert.alert('Coming Soon', 'Bhai, Voice Note feature abhi development mein hai.');
     setShowActions(false);
   };
 
   const sendLecture = () => {
-    addMessage(groupId, {
-      type: 'lecture',
-      senderId: 'admin',
-      senderName: 'Admin',
-    });
-    setShowActions(false);
+    // Recorded Lecture is now handled by sendAttachment('lecture') usually, 
+    // but the modal calls sendLecture directly. Let's point it to attachment picker.
+    sendAttachment('lecture');
+  };
+
+  const handleDeleteMessage = (messageId) => {
+    Alert.alert(
+      'Delete Message',
+      'Are you sure you want to delete this message?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteMessage(groupId, messageId),
+        },
+      ]
+    );
   };
 
   const renderItem = ({ item, index }) => {
@@ -153,9 +186,19 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
       <View>
         {showDate && <DateSeparator timestamp={item.timestamp} />}
         {item.type === 'poll' ? (
-          <PollBubble message={item} onVote={() => { }} voterId="admin" isAdmin />
+          <PollBubble
+            message={item}
+            onVote={() => { }}
+            voterId="admin"
+            isAdmin
+            onLongPress={() => handleDeleteMessage(item.id)}
+          />
         ) : (
-          <MessageBubble message={item} isAdmin />
+          <MessageBubble
+            message={item}
+            isAdmin
+            onLongPress={() => handleDeleteMessage(item.id)}
+          />
         )}
       </View>
     );

@@ -24,6 +24,7 @@ import {
 } from 'firebase/auth';
 import { useApp } from '../../context/AppContext';
 import firebaseApp from '../../services/firebase';
+import { checkAdmin } from '../../utils/helpers';
 
 const logoAsset = require('../../../assets/logo.png');
 const { width } = Dimensions.get('window');
@@ -43,12 +44,6 @@ export const PhoneLoginScreen = ({ navigation }) => {
     const [verificationId, setVerificationId] = useState(null);
     const recaptchaVerifier = useRef(null);
 
-    const checkAdmin = (identifier) => {
-        const adminCredentials = ['9304767761', 'krishmishra9801@gmail.com'];
-        // Cleaner check for phone (strip +91 if present)
-        const cleanId = identifier.replace('+91', '').toLowerCase().trim();
-        return adminCredentials.some(cred => cleanId.includes(cred.toLowerCase().trim()));
-    };
 
     const handleSendOTP = async () => {
         if (!phone || phone.length < 10) {
@@ -97,9 +92,10 @@ export const PhoneLoginScreen = ({ navigation }) => {
                 userObj = cred.user;
             }
 
-            const isAdmin = checkAdmin(email); // Assuming checkAdmin can handle email too
+            const isAdmin = checkAdmin(email);
             const userRole = isAdmin ? 'admin' : 'student';
             setRole(userRole);
+
             trackLogin({
                 name: emailMode === 'signup' ? fullName : (userObj.displayName || email),
                 email,
@@ -130,10 +126,22 @@ export const PhoneLoginScreen = ({ navigation }) => {
             const credential = PhoneAuthProvider.credential(verificationId, otp);
             const userCred = await signInWithCredential(auth, credential);
 
-            const isAdmin = checkAdmin(phone);
+            const identifier = phone || userCred.user.phoneNumber || userCred.user.uid;
+            const isAdmin = checkAdmin(identifier);
             const userRole = isAdmin ? 'admin' : 'student';
             setRole(userRole);
-            trackLogin({ phone, role: userRole, id: userCred.user.uid });
+
+            // Bhai, agar name diya hai toh Firebase mein update kar do
+            if (fullName) {
+                await updateProfile(userCred.user, { displayName: fullName });
+            }
+
+            trackLogin({
+                name: fullName || userCred.user.displayName || phone,
+                phone,
+                role: userRole,
+                id: userCred.user.uid
+            });
 
             Alert.alert('Success', 'Logged in successfully!');
         } catch (error) {
@@ -180,18 +188,16 @@ export const PhoneLoginScreen = ({ navigation }) => {
                 <View style={styles.form}>
                     {loginMode === 'email' ? (
                         <>
-                            {emailMode === 'signup' && (
-                                <View style={styles.inputContainer}>
-                                    <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Full Name"
-                                        value={fullName}
-                                        onChangeText={setFullName}
-                                        autoCapitalize="words"
-                                    />
-                                </View>
-                            )}
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Full Name (for display)"
+                                    value={fullName}
+                                    onChangeText={setFullName}
+                                    autoCapitalize="words"
+                                />
+                            </View>
                             <View style={styles.inputContainer}>
                                 <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
                                 <TextInput
@@ -273,6 +279,19 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                         value={otp}
                                         onChangeText={setOtp}
                                         maxLength={6}
+                                    />
+                                </View>
+                            )}
+
+                            {step === 'phone' && (
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Full Name (for display)"
+                                        value={fullName}
+                                        onChangeText={setFullName}
+                                        autoCapitalize="words"
                                     />
                                 </View>
                             )}

@@ -151,26 +151,32 @@ export const AdminDashboardScreen = ({ navigation }) => {
         </ScrollView>
 
         <Text style={styles.sectionTitle}>Groups List</Text>
-        {groups?.map((g) => (
-          <Card
-            key={g.id}
-            onPress={() => navigation.navigate('GroupChat', { groupId: g.id, groupName: g.name })}
-            style={styles.groupCard}
-          >
-            <View style={styles.groupCardContent}>
-              <View style={styles.groupIconContainer}>
-                <Ionicons name="chatbubble-ellipses" size={20} color="#64748b" />
+        {groups?.length > 0 ? (
+          groups.map((g) => (
+            <Card
+              key={g.id}
+              onPress={() => navigation.navigate('GroupChat', { groupId: g.id, groupName: g.name })}
+              style={styles.groupCard}
+            >
+              <View style={styles.groupCardContent}>
+                <View style={styles.groupIconContainer}>
+                  <Ionicons name="chatbubble-ellipses" size={20} color="#64748b" />
+                </View>
+                <View style={styles.groupInfo}>
+                  <Text style={styles.groupName}>{g.name}</Text>
+                  <Text style={styles.groupMeta}>
+                    {(groupMembers[g.id] || []).length} members
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward-circle-outline" size={24} color={theme.primary} />
               </View>
-              <View style={styles.groupInfo}>
-                <Text style={styles.groupName}>{g.name}</Text>
-                <Text style={styles.groupMeta}>
-                  {(groupMembers[g.id] || []).length} members
-                </Text>
-              </View>
-              <Ionicons name="arrow-forward-circle-outline" size={24} color={theme.primary} />
-            </View>
-          </Card>
-        ))}
+            </Card>
+          ))
+        ) : (
+          <View style={styles.noLogins}>
+            <Text style={styles.noLoginsText}>No groups found. Create one to get started!</Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* Broadcast Modal */}
@@ -227,16 +233,17 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
   },
   welcomeText: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '900',
     color: '#fff',
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
   headerSub: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 4,
-    fontWeight: '500',
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 6,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   statsContainer: {
     marginTop: -40,
@@ -269,12 +276,13 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 22, fontWeight: '800', color: '#0f172a' },
   statLabel: { fontSize: 11, fontWeight: '600', color: '#64748b', marginTop: 2 },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '900',
     color: '#1e293b',
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 16,
+    letterSpacing: -0.3,
   },
   loginsScroll: {
     paddingHorizontal: 16,

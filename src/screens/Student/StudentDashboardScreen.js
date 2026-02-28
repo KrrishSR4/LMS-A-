@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     paddingTop: 32,
     paddingBottom: 24,
   },
-  welcomeText: { fontSize: 26, fontWeight: '900', color: '#0f172a' },
-  welcomeSub: { fontSize: 16, color: '#64748b', marginTop: 4, fontWeight: '500' },
+  welcomeText: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
+  welcomeSub: { fontSize: 16, color: '#64748b', marginTop: 6, fontWeight: '600', letterSpacing: 0.1 },
   profileIndicator: {
     width: 50,
     height: 50,
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 20,
   },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b' },
-  seeAll: { fontSize: 14, color: '#2563eb', fontWeight: '700' },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: '#1e293b', letterSpacing: -0.2 },
+  seeAll: { fontSize: 15, color: '#2563eb', fontWeight: '800' },
   groupsScroll: { paddingLeft: 24, marginBottom: 32 },
   groupCard: {
     width: 160,

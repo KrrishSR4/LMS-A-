@@ -59,11 +59,11 @@ export const PhoneLoginScreen = ({ navigation }) => {
             //     `+91${phone}`,
             //     recaptchaVerifier.current
             // );
-            
+
             // Bhai, SDK 54 mein expo-firebase-recaptcha kaam nahi kar raha. 
             // Isliye abhi ke liye main iseko mock kar raha hoon taaki app chalta rahe.
             // Phone Auth ke liye naya tarika (Firebase Native) use karna hoga.
-            const vId = "mock_verification_id"; 
+            const vId = "mock_verification_id";
             setVerificationId(vId);
             setStep('otp');
             console.log('OTP request mocked for Demo. vId:', vId);
@@ -192,9 +192,12 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Full Name (for display)"
+                                    placeholderTextColor="#94a3b8"
                                     value={fullName}
                                     onChangeText={setFullName}
                                     autoCapitalize="words"
+                                    autoComplete="name"
+                                    textContentType="name"
                                 />
                             </View>
                             <View style={styles.inputContainer}>
@@ -202,10 +205,13 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Email Address"
+                                    placeholderTextColor="#94a3b8"
                                     value={email}
                                     onChangeText={setEmail}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
+                                    autoComplete="email"
+                                    textContentType="emailAddress"
                                 />
                             </View>
                             <View style={styles.inputContainer}>
@@ -213,9 +219,12 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Password"
+                                    placeholderTextColor="#94a3b8"
                                     value={password}
                                     onChangeText={setPassword}
                                     secureTextEntry={!showPassword}
+                                    autoComplete="password"
+                                    textContentType="password"
                                 />
                                 <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
                                     <Ionicons
@@ -262,10 +271,13 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Phone Number"
+                                        placeholderTextColor="#94a3b8"
                                         keyboardType="phone-pad"
                                         value={phone}
                                         onChangeText={setPhone}
                                         maxLength={10}
+                                        autoComplete="tel"
+                                        textContentType="telephoneNumber"
                                     />
                                 </View>
                             ) : (
@@ -274,10 +286,13 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="6-digit Code"
+                                        placeholderTextColor="#94a3b8"
                                         keyboardType="number-pad"
                                         value={otp}
                                         onChangeText={setOtp}
                                         maxLength={6}
+                                        autoComplete="one-time-code"
+                                        textContentType="oneTimeCode"
                                     />
                                 </View>
                             )}
@@ -288,9 +303,12 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Full Name (for display)"
+                                        placeholderTextColor="#94a3b8"
                                         value={fullName}
                                         onChangeText={setFullName}
                                         autoCapitalize="words"
+                                        autoComplete="name"
+                                        textContentType="name"
                                     />
                                 </View>
                             )}

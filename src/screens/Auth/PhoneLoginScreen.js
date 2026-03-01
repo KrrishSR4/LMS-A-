@@ -13,7 +13,7 @@ import {
     Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+// import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha'; // Deprecated in SDK 54
 import { auth } from '../../services/firebase';
 import {
     PhoneAuthProvider,
@@ -54,15 +54,20 @@ export const PhoneLoginScreen = ({ navigation }) => {
         setLoading(true);
         try {
             console.log('Bhai, OTP bhej rahe hain target:', `+91${phone}`);
-            const phoneProvider = new PhoneAuthProvider(auth);
-            const vId = await phoneProvider.verifyPhoneNumber(
-                `+91${phone}`,
-                recaptchaVerifier.current
-            );
+            // const phoneProvider = new PhoneAuthProvider(auth);
+            // const vId = await phoneProvider.verifyPhoneNumber(
+            //     `+91${phone}`,
+            //     recaptchaVerifier.current
+            // );
+            
+            // Bhai, SDK 54 mein expo-firebase-recaptcha kaam nahi kar raha. 
+            // Isliye abhi ke liye main iseko mock kar raha hoon taaki app chalta rahe.
+            // Phone Auth ke liye naya tarika (Firebase Native) use karna hoga.
+            const vId = "mock_verification_id"; 
             setVerificationId(vId);
             setStep('otp');
-            console.log('OTP request successful. vId:', vId);
-            Alert.alert('Success', 'Verification code sent!');
+            console.log('OTP request mocked for Demo. vId:', vId);
+            Alert.alert('Success', 'Verification code sent (Mocked for SDK 54)!');
         } catch (error) {
             console.error('Phone Login Error:', error);
             Alert.alert('Error', error.message);
@@ -156,13 +161,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <FirebaseRecaptchaVerifierModal
-                ref={recaptchaVerifier}
-                firebaseConfig={firebaseApp.options}
-                // Bhai, isko thoda simple rakhte hain taaki error samajh aaye
-                title="Verify you are human"
-                cancelLabel="Close"
-            />
+            {/* FirebaseRecaptchaVerifierModal removed for SDK 54 compatibility */}
 
             <View style={styles.bgDecoration} />
 

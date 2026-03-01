@@ -5,23 +5,23 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "//icon": "./assets/logo.png",
-    "newArchEnabled": true,
+    "icon": "./assets/logo.png",
+    "newArchEnabled": false,
     "splash": {
-      "//image": "./assets/logo.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#1e293b"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.lms.expo",
-      "//icon": "./assets/logo.png"
+      "icon": "./assets/logo.png"
     },
     "android": {
       "package": "com.lms.expo",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "//foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#1e293b"
       },
       "permissions": [

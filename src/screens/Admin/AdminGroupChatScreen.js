@@ -154,7 +154,7 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
   };
 
   const sendVoice = () => {
-    Alert.alert('Coming Soon', 'Bhai, Voice Note feature abhi development mein hai.');
+    Alert.alert('Coming Soon', 'Voice Note feature is currently under development.');
     setShowActions(false);
   };
 

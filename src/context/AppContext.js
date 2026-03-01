@@ -14,7 +14,7 @@ import {
 } from '../mockData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId, checkAdmin } from '../utils/helpers';
-// Bhai, ab Firebase use karenge
+// Switch to Firebase for authentication
 import { auth, storage } from '../services/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -53,7 +53,7 @@ export const AppProvider = ({ children }) => {
       if (user) {
         setProfile(prev => {
           const enrolledUser = students[user.uid] || {};
-          // Bhai, pending students mein bhi check kar lo
+          // Check pending students list as well
           const pendingUser = (pendingStudents || []).find(s => s.id === user.uid) || {};
 
           return {
@@ -94,7 +94,7 @@ export const AppProvider = ({ children }) => {
         role: 'student'
       }, ...prev].slice(0, 10));
 
-      // Bhai, agar profile mein name nahi hai toh update karo
+      // Update name if not present in profile
       setProfile(prev => ({
         ...prev,
         name: userData.name || prev.name || 'Student',
@@ -102,7 +102,7 @@ export const AppProvider = ({ children }) => {
         phone: userData.phone || prev.phone,
       }));
 
-      // Bhai, agar name diya hai toh enrolled storage bhi update kar do
+      // Update enrolled storage if name is provided
       if (userData.name) {
         setStudents(prev => {
           if (prev[studentId]) {
@@ -115,7 +115,7 @@ export const AppProvider = ({ children }) => {
         });
       }
 
-      // Bhai, agar naya student hai aur pending nahi hai, toh add karo
+      // Add to pending if new student and not yet assigned
       setPendingStudents(prev => {
         const isAlreadyPending = prev.find(s => s.id === studentId);
         const isAssigned = Object.values(groupMembers).some(m => m.includes(studentId));
@@ -140,7 +140,7 @@ export const AppProvider = ({ children }) => {
   // Upload File Logic (Firebase Storage) - Robust Blob conversion
   const uploadFile = useCallback(async (fileUri, fileName) => {
     try {
-      // Bhai, fetch(uri) mobile pe unreliable ho sakta hai, isliye XMLHttpRequest use karenge
+      // Use XMLHttpRequest for robust blob conversion as fetch() can be unreliable on mobile
       const blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.onload = () => resolve(xhr.response);
@@ -192,14 +192,14 @@ export const AppProvider = ({ children }) => {
       setGroupMembers(storedMembers || {});
       setStudents(storedStudents || {});
 
-      // Bhai, data cleanup v2 - force logout anyone to clear mocks
+      // Data migration v2 - clear mocked sessions
       const migrationV2Done = await AsyncStorage.getItem('migration_nuclear_v2');
       if (!migrationV2Done) {
         await signOut(auth);
         await clearSession();
         await AsyncStorage.clear(); // Complete wipe
         await AsyncStorage.setItem('migration_nuclear_v2', 'true');
-        console.log('Bhai, NUCLEAR CLEAR COMPLETE. All sessions terminated.');
+        console.log('System migration complete. All sessions terminated.');
         // Re-init defaults after wipe
         setGroups([]);
         setPendingStudents([]);

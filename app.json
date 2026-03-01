@@ -15,7 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.lms.expo",
-      "icon": "./assets/logo.png"
+      "icon": "./assets/logo.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.lms.expo",
@@ -48,7 +51,9 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/e6e035b8-0c1f-46c6-8b87-c32778fb7da9"
+      "url": "https://u.expo.dev/e6e035b8-0c1f-46c6-8b87-c32778fb7da9",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

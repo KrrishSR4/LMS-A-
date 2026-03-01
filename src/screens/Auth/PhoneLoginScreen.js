@@ -11,7 +11,9 @@ import {
     Platform,
     Dimensions,
     Image,
+    StatusBar,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 // import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha'; // Deprecated in SDK 54
 import { auth } from '../../services/firebase';
@@ -53,24 +55,24 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            console.log('Bhai, OTP bhej rahe hain target:', `+91${phone}`);
+            console.log('Sending OTP to:', `+91${phone}`);
             // const phoneProvider = new PhoneAuthProvider(auth);
             // const vId = await phoneProvider.verifyPhoneNumber(
             //     `+91${phone}`,
             //     recaptchaVerifier.current
             // );
 
-            // Bhai, SDK 54 mein expo-firebase-recaptcha kaam nahi kar raha. 
-            // Isliye abhi ke liye main iseko mock kar raha hoon taaki app chalta rahe.
-            // Phone Auth ke liye naya tarika (Firebase Native) use karna hoga.
+            // Note: expo-firebase-recaptcha is deprecated in SDK 54.
+            // Using a mock verification ID for demonstration purposes.
+            // Native Firebase authentication would be required for production use.
             const vId = "mock_verification_id";
             setVerificationId(vId);
             setStep('otp');
-            console.log('OTP request mocked for Demo. vId:', vId);
-            Alert.alert('Success', 'Verification code sent (Mocked for SDK 54)!');
+            console.log('OTP request mocked. verificationId:', vId);
+            Alert.alert('Success', 'Verification code sent!');
         } catch (error) {
             console.error('Phone Login Error:', error);
-            Alert.alert('Error', error.message);
+            Alert.alert('Error', 'Failed to send OTP. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -78,7 +80,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
     const handleEmailAuth = async () => {
         if (!email || !password) {
-            Alert.alert('Error', 'Email aur Password dono bhariye bhai');
+            Alert.alert('Error', 'Please enter both Email and Password');
             return;
         }
         setLoading(true);
@@ -88,9 +90,9 @@ export const PhoneLoginScreen = ({ navigation }) => {
                 console.log('Registering user:', email);
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 userObj = cred.user;
-                // Bhai, Firebase profile mein bhi name save kar dete hain
+                // Save user name to Firebase profile
                 await updateProfile(userObj, { displayName: fullName });
-                Alert.alert('Success', 'Account ban gaya bhai! Ab aap login ho gaye hain.');
+                Alert.alert('Success', 'Account created successfully! You are now logged in.');
             } else {
                 console.log('Logging in user:', email);
                 const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -110,11 +112,11 @@ export const PhoneLoginScreen = ({ navigation }) => {
         } catch (error) {
             console.error('Email Auth Error:', error);
             let msg = error.message;
-            if (error.code === 'auth/invalid-credential') msg = 'Email ya Password galat hai.';
-            if (error.code === 'auth/email-already-in-use') msg = 'Ye email pehle se registered hai bhai.';
-            if (error.code === 'auth/weak-password') msg = 'Password thoda strong rakho (min 6 chars).';
+            if (error.code === 'auth/invalid-credential') msg = 'Invalid Email or Password.';
+            if (error.code === 'auth/email-already-in-use') msg = 'This email is already registered.';
+            if (error.code === 'auth/weak-password') msg = 'Password is too weak (min 6 characters).';
 
-            Alert.alert('Auth Failed', msg);
+            Alert.alert('Authentication Failed', msg);
         } finally {
             setLoading(false);
         }
@@ -136,7 +138,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
             const userRole = isAdmin ? 'admin' : 'student';
             setRole(userRole);
 
-            // Bhai, agar name diya hai toh Firebase mein update kar do
+            // Update user name in Firebase if provided
             if (fullName) {
                 await updateProfile(userCred.user, { displayName: fullName });
             }
@@ -161,8 +163,11 @@ export const PhoneLoginScreen = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            {/* FirebaseRecaptchaVerifierModal removed for SDK 54 compatibility */}
-
+            <StatusBar barStyle="light-content" />
+            <LinearGradient
+                colors={['#0f172a', '#1e293b', '#334155']}
+                style={StyleSheet.absoluteFill}
+            />
             <View style={styles.bgDecoration} />
 
             <View style={styles.content}>
@@ -350,12 +355,12 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
                     <View style={styles.divider}>
                         <View style={styles.dividerLine} />
-                        <Text style={styles.dividerText}>SECURE LOGIN</Text>
+                        <Text style={styles.dividerText}>SECURE ACCESS</Text>
                         <View style={styles.dividerLine} />
                     </View>
 
                     <Text style={styles.infoText}>
-                        Bhai, security ke liye specific admin credentials hi access rakhenge.
+                        Access is restricted to verified students and administrators for maximum security.
                     </Text>
                 </View>
             </View>
@@ -366,17 +371,16 @@ export const PhoneLoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     bgDecoration: {
         position: 'absolute',
-        top: -width * 0.2,
-        right: -width * 0.2,
-        width: width * 0.8,
-        height: width * 0.8,
-        borderRadius: width * 0.4,
-        backgroundColor: '#eff6ff',
-        zIndex: -1,
+        top: -width * 0.1,
+        right: -width * 0.1,
+        width: width * 0.6,
+        height: width * 0.6,
+        borderRadius: width * 0.3,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        zIndex: 0,
     },
     content: {
         flex: 1,
@@ -385,29 +389,34 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 40,
     },
     logoContainer: {
-        width: 140,
-        height: 140,
+        width: 120,
+        height: 120,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: 30,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     logoImage: {
-        width: 140,
-        height: 140,
+        width: 100,
+        height: 100,
     },
     title: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: '900',
-        color: '#0f172a',
+        color: '#fff',
+        letterSpacing: 1,
     },
     subtitle: {
         fontSize: 16,
-        color: '#64748b',
+        color: '#94a3b8',
         textAlign: 'center',
-        marginTop: 10,
+        marginTop: 12,
         paddingHorizontal: 20,
         lineHeight: 24,
     },
@@ -417,24 +426,24 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8fafc',
-        borderRadius: 16,
+        backgroundColor: 'rgba(30, 41, 59, 0.5)',
+        borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         paddingHorizontal: 16,
-        height: 60,
-        marginBottom: 20,
+        height: 64,
+        marginBottom: 16,
     },
     countryCode: {
         paddingRight: 12,
         borderRightWidth: 1,
-        borderRightColor: '#e2e8f0',
+        borderRightColor: 'rgba(255, 255, 255, 0.1)',
         marginRight: 12,
     },
     countryText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#1e293b',
+        color: '#f8fafc',
     },
     inputIcon: {
         marginRight: 12,
@@ -442,98 +451,90 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#1e293b',
+        color: '#f8fafc',
         fontWeight: '500',
     },
     button: {
-        backgroundColor: '#2563eb',
-        height: 60,
-        borderRadius: 16,
+        backgroundColor: '#3b82f6',
+        height: 64,
+        borderRadius: 20,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 4,
-        shadowColor: '#2563eb',
+        marginTop: 8,
+        elevation: 8,
+        shadowColor: '#3b82f6',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
     },
     buttonDisabled: {
-        opacity: 0.7,
+        opacity: 0.6,
     },
     buttonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
     divider: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 24,
+        marginVertical: 32,
     },
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: '#e2e8f0',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     dividerText: {
-        marginHorizontal: 12,
-        color: '#94a3b8',
+        marginHorizontal: 16,
+        color: '#64748b',
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '800',
+        letterSpacing: 2,
     },
     resendBtn: {
         alignItems: 'center',
-        paddingVertical: 10,
-        marginBottom: 10,
+        paddingVertical: 12,
     },
     resendText: {
-        color: '#2563eb',
+        color: '#60a5fa',
         fontSize: 14,
         fontWeight: '600',
     },
     switchModeBtn: {
-        marginTop: 15,
+        marginTop: 20,
         alignItems: 'center',
-        paddingVertical: 10,
+        paddingVertical: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
     },
     switchModeText: {
-        color: '#2563eb',
+        color: '#fff',
         fontSize: 15,
         fontWeight: '700',
-        textDecorationLine: 'underline',
     },
     subSwitchBtn: {
-        marginTop: 15,
+        marginTop: 16,
         alignItems: 'center',
     },
     subSwitchText: {
-        color: '#64748b',
+        color: '#94a3b8',
         fontSize: 14,
         fontWeight: '600',
     },
     eyeBtn: {
-        padding: 5,
-    },
-    guestButton: {
-        height: 56,
-        borderRadius: 16,
-        borderWidth: 1.5,
-        borderColor: '#e2e8f0',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f8fafc',
-    },
-    guestButtonText: {
-        color: '#475569',
-        fontSize: 16,
-        fontWeight: '700',
+        padding: 8,
     },
     infoText: {
-        marginTop: 24,
+        marginTop: 32,
         fontSize: 12,
-        color: '#94a3b8',
+        color: '#64748b',
         textAlign: 'center',
-        lineHeight: 18,
+        lineHeight: 20,
+        paddingHorizontal: 20,
     },
 });

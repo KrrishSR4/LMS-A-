@@ -32,7 +32,7 @@ const logoAsset = require('../../../assets/logo.png');
 const { width } = Dimensions.get('window');
 
 export const PhoneLoginScreen = ({ navigation }) => {
-    const { setRole, trackLogin } = useApp();
+    const { setRole, trackLogin, theme } = useApp();
     const [loginMode, setLoginMode] = useState('phone'); // 'phone' | 'email'
     const [emailMode, setEmailMode] = useState('login'); // 'login' | 'signup'
     const [fullName, setFullName] = useState('');
@@ -46,7 +46,6 @@ export const PhoneLoginScreen = ({ navigation }) => {
     const [verificationId, setVerificationId] = useState(null);
     const recaptchaVerifier = useRef(null);
 
-
     const handleSendOTP = async () => {
         if (!phone || phone.length < 10) {
             Alert.alert('Error', 'Please enter a valid 10-digit phone number');
@@ -56,15 +55,8 @@ export const PhoneLoginScreen = ({ navigation }) => {
         setLoading(true);
         try {
             console.log('Sending OTP to:', `+91${phone}`);
-            // const phoneProvider = new PhoneAuthProvider(auth);
-            // const vId = await phoneProvider.verifyPhoneNumber(
-            //     `+91${phone}`,
-            //     recaptchaVerifier.current
-            // );
-
             // Note: expo-firebase-recaptcha is deprecated in SDK 54.
             // Using a mock verification ID for demonstration purposes.
-            // Native Firebase authentication would be required for production use.
             const vId = "mock_verification_id";
             setVerificationId(vId);
             setStep('otp');
@@ -90,7 +82,6 @@ export const PhoneLoginScreen = ({ navigation }) => {
                 console.log('Registering user:', email);
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 userObj = cred.user;
-                // Save user name to Firebase profile
                 await updateProfile(userObj, { displayName: fullName });
                 Alert.alert('Success', 'Account created successfully! You are now logged in.');
             } else {
@@ -138,7 +129,6 @@ export const PhoneLoginScreen = ({ navigation }) => {
             const userRole = isAdmin ? 'admin' : 'student';
             setRole(userRole);
 
-            // Update user name in Firebase if provided
             if (fullName) {
                 await updateProfile(userCred.user, { displayName: fullName });
             }
@@ -161,26 +151,30 @@ export const PhoneLoginScreen = ({ navigation }) => {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
+            style={[styles.container, { backgroundColor: theme.secondary || '#F8FAFC' }]}
         >
-            <StatusBar barStyle="light-content" />
+            <StatusBar barStyle="dark-content" />
             <LinearGradient
-                colors={['#0f172a', '#1e293b', '#334155']}
+                colors={[theme.secondary || '#F8FAFC', '#FFFFFF', theme.secondary || '#DBEAFE']}
                 style={StyleSheet.absoluteFill}
             />
-            <View style={styles.bgDecoration} />
+
+            {/* Decorative Background Blobs */}
+            <View style={[styles.blob, styles.blob1, { backgroundColor: theme.primary, opacity: 0.1 }]} />
+            <View style={[styles.blob, styles.blob2, { backgroundColor: theme.primary, opacity: 0.05 }]} />
+            <View style={[styles.blob, styles.blob3, { backgroundColor: theme.primary, opacity: 0.08 }]} />
 
             <View style={styles.content}>
                 <View style={styles.header}>
-                    <View style={styles.logoContainer}>
+                    <View style={[styles.logoContainer, { shadowColor: theme.primary }]}>
                         <Image
                             source={logoAsset}
                             style={styles.logoImage}
                             resizeMode="contain"
                         />
                     </View>
-                    <Text style={styles.title}>Road To A+</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.title, { color: theme.text || '#1E293B' }]}>Road To A+</Text>
+                    <Text style={[styles.subtitle, { color: theme.text || '#64748B', opacity: 0.7 }]}>
                         {loginMode === 'email'
                             ? (emailMode === 'signup' ? 'Create your account' : 'Login to your account')
                             : (step === 'phone'
@@ -193,7 +187,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                     {loginMode === 'email' ? (
                         <>
                             <View style={styles.inputContainer}>
-                                <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                <Ionicons name="person-outline" size={20} color={theme.primary} style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Full Name (for display)"
@@ -206,7 +200,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                 />
                             </View>
                             <View style={styles.inputContainer}>
-                                <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                <Ionicons name="mail-outline" size={20} color={theme.primary} style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Email Address"
@@ -220,7 +214,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                 />
                             </View>
                             <View style={styles.inputContainer}>
-                                <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                <Ionicons name="lock-closed-outline" size={20} color={theme.primary} style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Password"
@@ -241,20 +235,27 @@ export const PhoneLoginScreen = ({ navigation }) => {
                             </View>
 
                             <Pressable
-                                style={[styles.button, loading && styles.buttonDisabled]}
+                                style={[styles.button, loading && styles.buttonDisabled, { shadowColor: theme.primary }]}
                                 onPress={handleEmailAuth}
                                 disabled={loading}
                             >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <>
-                                        <Text style={styles.buttonText}>
-                                            {emailMode === 'signup' ? 'Register Now' : 'Login with Email'}
-                                        </Text>
-                                        <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginLeft: 8 }} />
-                                    </>
-                                )}
+                                <LinearGradient
+                                    colors={[theme.primary, theme.primary + 'CC']} // Adding some transparency for gradient if possible, or just theme.primary
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.buttonGradient}
+                                >
+                                    {loading ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <>
+                                            <Text style={styles.buttonText}>
+                                                {emailMode === 'signup' ? 'Register Now' : 'Login with Email'}
+                                            </Text>
+                                            <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                                        </>
+                                    )}
+                                </LinearGradient>
                             </Pressable>
 
                             <Pressable
@@ -271,7 +272,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                             {step === 'phone' ? (
                                 <View style={styles.inputContainer}>
                                     <View style={styles.countryCode}>
-                                        <Text style={styles.countryText}>+91</Text>
+                                        <Text style={[styles.countryText, { color: theme.text }]}>+91</Text>
                                     </View>
                                     <TextInput
                                         style={styles.input}
@@ -287,7 +288,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
                                 </View>
                             ) : (
                                 <View style={styles.inputContainer}>
-                                    <Ionicons name="key-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                    <Ionicons name="key-outline" size={20} color={theme.primary} style={styles.inputIcon} />
                                     <TextInput
                                         style={styles.input}
                                         placeholder="6-digit Code"
@@ -304,7 +305,7 @@ export const PhoneLoginScreen = ({ navigation }) => {
 
                             {step === 'phone' && (
                                 <View style={styles.inputContainer}>
-                                    <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                                    <Ionicons name="person-outline" size={20} color={theme.primary} style={styles.inputIcon} />
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Full Name (for display)"
@@ -319,25 +320,32 @@ export const PhoneLoginScreen = ({ navigation }) => {
                             )}
 
                             <Pressable
-                                style={[styles.button, loading && styles.buttonDisabled]}
+                                style={[styles.button, loading && styles.buttonDisabled, { shadowColor: theme.primary }]}
                                 onPress={step === 'phone' ? handleSendOTP : handleVerifyOTP}
                                 disabled={loading}
                             >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <>
-                                        <Text style={styles.buttonText}>{step === 'phone' ? 'Send OTP' : 'Verify & Login'}</Text>
-                                        <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
-                                    </>
-                                )}
+                                <LinearGradient
+                                    colors={[theme.primary, theme.primary + 'DD']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.buttonGradient}
+                                >
+                                    {loading ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <>
+                                            <Text style={styles.buttonText}>{step === 'phone' ? 'Send OTP' : 'Verify & Login'}</Text>
+                                            <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                                        </>
+                                    )}
+                                </LinearGradient>
                             </Pressable>
                         </>
                     )}
 
                     {step === 'otp' && loginMode === 'phone' && (
                         <Pressable style={styles.resendBtn} onPress={() => setStep('phone')}>
-                            <Text style={styles.resendText}>Change Phone Number</Text>
+                            <Text style={[styles.resendText, { color: theme.primary }]}>Change Phone Number</Text>
                         </Pressable>
                     )}
 
@@ -372,15 +380,28 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    bgDecoration: {
+    blob: {
         position: 'absolute',
-        top: -width * 0.1,
-        right: -width * 0.1,
-        width: width * 0.6,
-        height: width * 0.6,
-        borderRadius: width * 0.3,
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderRadius: 1000,
         zIndex: 0,
+    },
+    blob1: {
+        width: width * 1.5,
+        height: width * 1.5,
+        top: -width * 0.8,
+        right: -width * 0.5,
+    },
+    blob2: {
+        width: width * 0.8,
+        height: width * 0.8,
+        bottom: -width * 0.2,
+        left: -width * 0.3,
+    },
+    blob3: {
+        width: width * 0.5,
+        height: width * 0.5,
+        top: width * 0.4,
+        left: -width * 0.1,
     },
     content: {
         flex: 1,
@@ -392,33 +413,34 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     logoContainer: {
-        width: 120,
-        height: 120,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: 30,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    logoImage: {
         width: 100,
         height: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        backgroundColor: '#fff',
+        borderRadius: 30,
+        elevation: 15,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+    },
+    logoImage: {
+        width: 70,
+        height: 70,
     },
     title: {
-        fontSize: 32,
+        fontSize: 34,
         fontWeight: '900',
-        color: '#fff',
-        letterSpacing: 1,
+        letterSpacing: -1,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#94a3b8',
+        fontSize: 15,
         textAlign: 'center',
-        marginTop: 12,
+        marginTop: 10,
         paddingHorizontal: 20,
-        lineHeight: 24,
+        lineHeight: 22,
+        fontWeight: '600',
     },
     form: {
         width: '100%',
@@ -426,24 +448,28 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(30, 41, 59, 0.5)',
-        borderRadius: 20,
+        backgroundColor: '#fff',
+        borderRadius: 22,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: '#E2E8F0',
         paddingHorizontal: 16,
         height: 64,
         marginBottom: 16,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
     },
     countryCode: {
         paddingRight: 12,
         borderRightWidth: 1,
-        borderRightColor: 'rgba(255, 255, 255, 0.1)',
+        borderRightColor: '#E2E8F0',
         marginRight: 12,
     },
     countryText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#f8fafc',
     },
     inputIcon: {
         marginRight: 12,
@@ -451,22 +477,24 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#f8fafc',
-        fontWeight: '500',
+        color: '#1E293B',
+        fontWeight: '600',
     },
     button: {
-        backgroundColor: '#3b82f6',
         height: 64,
-        borderRadius: 20,
+        borderRadius: 22,
+        marginTop: 8,
+        elevation: 10,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 15,
+        overflow: 'hidden',
+    },
+    buttonGradient: {
+        flex: 1,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 8,
-        elevation: 8,
-        shadowColor: '#3b82f6',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
     },
     buttonDisabled: {
         opacity: 0.6,
@@ -485,12 +513,12 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: '#E2E8F0',
     },
     dividerText: {
         marginHorizontal: 16,
-        color: '#64748b',
-        fontSize: 12,
+        color: '#94A3B8',
+        fontSize: 11,
         fontWeight: '800',
         letterSpacing: 2,
     },
@@ -499,32 +527,31 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     resendText: {
-        color: '#60a5fa',
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '800',
     },
     switchModeBtn: {
-        marginTop: 20,
+        marginTop: 10,
         alignItems: 'center',
-        paddingVertical: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.05)',
+        paddingVertical: 15,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        borderRadius: 22,
+        borderWidth: 1.5,
+        borderColor: '#E2E8F0',
     },
     switchModeText: {
-        color: '#fff',
+        color: '#475569',
         fontSize: 15,
-        fontWeight: '700',
+        fontWeight: '800',
     },
     subSwitchBtn: {
         marginTop: 16,
         alignItems: 'center',
     },
     subSwitchText: {
-        color: '#94a3b8',
+        color: '#64748B',
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
     },
     eyeBtn: {
         padding: 8,
@@ -532,9 +559,12 @@ const styles = StyleSheet.create({
     infoText: {
         marginTop: 32,
         fontSize: 12,
-        color: '#64748b',
+        color: '#94A3B8',
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: 18,
         paddingHorizontal: 20,
+        fontWeight: '600',
     },
 });
+
+

@@ -30,8 +30,8 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
     settings,
     profile,
     disabledStudents,
-    liveLecture,
     isTyping,
+    groupLives,
   } = useApp();
   const [input, setInput] = useState('');
   const flatListRef = useRef(null);
@@ -40,7 +40,7 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
   const groupSettings = settings[groupId] || {};
   const canSend = groupSettings.allowStudentMessages !== false;
   const isDisabled = disabledStudents.includes(profile?.id);
-  const showLiveBanner = liveLecture?.active && liveLecture?.groupId === groupId;
+  const currentLive = groupLives[groupId];
   const voterId = profile?.id || 'current_user';
   const groupTyping = isTyping[groupId] || [];
 
@@ -111,7 +111,12 @@ export const StudentGroupChatScreen = ({ route, navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      {showLiveBanner && <LiveLectureBanner lecture={liveLecture} />}
+      {currentLive?.active && (
+        <LiveLectureBanner
+          lecture={currentLive}
+          isAdmin={false}
+        />
+      )}
       <FlatList
         ref={flatListRef}
         data={msgList}

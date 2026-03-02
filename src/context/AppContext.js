@@ -45,6 +45,7 @@ export const AppProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [recentLogins, setRecentLogins] = useState([]); // Array of { name, time, role }
   const [theme, setTheme] = useState(THEMES.indigo);
+  const [groupLives, setGroupLives] = useState({}); // { groupId: { active: true, link: 'youtube_url', title: 'Lecture Name' } }
 
   // Firebase Auth Listener
   useEffect(() => {
@@ -425,6 +426,20 @@ export const AppProvider = ({ children }) => {
     setBankAccount(prev => ({ ...prev, ...updates }));
   }, []);
 
+  const startLive = useCallback((groupId, link, title) => {
+    setGroupLives(prev => ({
+      ...prev,
+      [groupId]: { active: true, link, title: title || 'Live Lecture' },
+    }));
+  }, []);
+
+  const endLive = useCallback((groupId) => {
+    setGroupLives(prev => ({
+      ...prev,
+      [groupId]: { active: false, link: '', title: '' },
+    }));
+  }, []);
+
   const payFee = useCallback((studentId, amount) => {
     setFees((prev) => ({
       ...prev,
@@ -475,6 +490,9 @@ export const AppProvider = ({ children }) => {
     recentLogins,
     theme,
     setTheme,
+    groupLives,
+    startLive,
+    endLive,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

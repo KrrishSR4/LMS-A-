@@ -44,6 +44,9 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
     isTyping,
     simulateTyping,
     uploadFile,
+    groupLives,
+    startLive,
+    endLive,
   } = useApp();
   const [input, setInput] = useState('');
   const [showActions, setShowActions] = useState(false);
@@ -52,6 +55,9 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [announcementText, setAnnouncementText] = useState('');
+  const [showLiveModal, setShowLiveModal] = useState(false);
+  const [liveLink, setLiveLink] = useState('');
+  const [liveTitle, setLiveTitle] = useState('');
   const flatListRef = useRef(null);
 
   const groupTyping = isTyping[groupId] || [];
@@ -59,7 +65,7 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
   const msgList = (messages[groupId] || []).slice().sort((a, b) => a.timestamp - b.timestamp);
   const groupSettings = settings[groupId] || {};
   const members = groupMembers[groupId] || [];
-  const showLiveBanner = liveLecture?.active && liveLecture?.groupId === groupId;
+  const currentLive = groupLives[groupId];
 
   useEffect(() => {
     navigation.setOptions({
@@ -210,7 +216,13 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      {showLiveBanner && <LiveLectureBanner lecture={liveLecture} />}
+      {currentLive?.active && (
+        <LiveLectureBanner
+          lecture={currentLive}
+          isAdmin={true}
+          onEndLive={() => endLive(groupId)}
+        />
+      )}
       <FlatList
         ref={flatListRef}
         data={msgList}
@@ -260,6 +272,26 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
             </Pressable>
             <Pressable style={styles.actionItem} onPress={sendLecture}>
               <Text>🎥 Recorded Lecture</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.actionItem, currentLive?.active && { backgroundColor: '#fef2f2' }]}
+              onPress={() => {
+                setShowActions(false);
+                if (currentLive?.active) {
+                  Alert.alert(
+                    'End Live',
+                    'Are you sure you want to end the live lecture?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'End Live', style: 'destructive', onPress: () => endLive(groupId) },
+                    ]
+                  );
+                } else {
+                  setShowLiveModal(true);
+                }
+              }}
+            >
+              <Text>{currentLive?.active ? '⏹️ End Live Lecture' : '🔴 Start Live Lecture'}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -320,6 +352,45 @@ export const AdminGroupChatScreen = ({ route, navigation }) => {
             </Pressable>
             <Pressable style={styles.sendPollBtn} onPress={sendPoll}>
               <Text style={styles.sendPollText}>Send Poll</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Start Live Lecture modal */}
+      <Modal visible={showLiveModal} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setShowLiveModal(false)}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>🔴 Start Live Lecture</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Lecture Title (e.g. Physics Ch-3)"
+              value={liveTitle}
+              onChangeText={setLiveTitle}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Paste YouTube Live Link here..."
+              value={liveLink}
+              onChangeText={setLiveLink}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <Pressable
+              style={[styles.sendPollBtn, { backgroundColor: '#dc2626' }]}
+              onPress={() => {
+                if (!liveLink.trim()) {
+                  Alert.alert('Error', 'Please paste a YouTube link');
+                  return;
+                }
+                startLive(groupId, liveLink.trim(), liveTitle.trim());
+                setLiveLink('');
+                setLiveTitle('');
+                setShowLiveModal(false);
+                Alert.alert('Live Started! 🔴', 'All students in this group can now join the live lecture.');
+              }}
+            >
+              <Text style={styles.sendPollText}>Go Live 🔴</Text>
             </Pressable>
           </Pressable>
         </Pressable>
